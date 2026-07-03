@@ -10,7 +10,7 @@ const Store = (() => {
     "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
   const CATEGORIAS_GASTO = ["Deportes", "Deudas", "Educación", "Hogar",
-    "Impuestos", "Otros", "Salud", "Seguros", "Servicio",
+    "Impuestos", "Otros", "Reservas", "Salud", "Seguros", "Servicio",
     "Servicios Profesionales", "Tarjeta de Crédito", "Transporte"];
   const TIPOS_INGRESO = ["Sueldo", "Honorarios", "Otros"];
 
