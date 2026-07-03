@@ -105,7 +105,7 @@ const ViewIngresos = (() => {
   function submit(e, container) {
     e.preventDefault();
     const id = document.getElementById("fi-id").value;
-    const nombre = document.getElementById("fi-nombre").value.trim();
+    const nombre = document.getElementById("fi-nombre").value.trim().toUpperCase();
     const tipo = document.getElementById("fi-tipo").value;
     if (!nombre) { toast("La descripción es obligatoria"); return; }
     if (!tipo) { toast("El tipo es obligatorio"); return; }
