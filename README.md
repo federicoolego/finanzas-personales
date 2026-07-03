@@ -1,66 +1,51 @@
-# Gastos Fijos
+# Finanzas Familiar
 
-App web liviana para registrar y controlar los **gastos fijos del mes**: ABM de gastos, grilla de pagos (qué está pago / qué falta), y un dashboard con KPIs y gráficos filtrables por gasto, año y mes.
+App web (sin backend, todo en el navegador con `localStorage`) para controlar mes a mes
+los **ingresos**, los **gastos** y la **plata disponible** de la familia.
 
-Sin frameworks ni build: es **HTML + CSS + JavaScript puro**. Se abre directo en el navegador y persiste todo en `localStorage`.
+El foco NO es marcar qué se pagó, sino los **KPIs de montos y porcentajes disponibles** del mes.
 
-## Características
+## Pantallas
 
-- **Dashboard** — KPIs (total del período, pagado, falta pagar, promedio mensual) y 4 gráficos (evolución mensual, distribución por categoría, pagado vs. falta, top gastos). Filtros por **Gasto**, **Año** y **Mes**.
-- **Pagos del mes** — grilla del mes elegido con toggle de pago por concepto, badges de estado y totales pagado/pendiente.
-- **Gastos (ABM)** — alta, edición y baja de gastos fijos, con montos mensuales por año y categoría (Gastos Fijos / Tarjetas de Crédito).
-- **Import / Export** — respaldo y restauración de todos los datos en un archivo JSON.
-- Datos iniciales **pre-cargados desde la hoja `2026`** del Excel original.
+- **Mes Actual** (pantalla inicial): KPIs del mes elegido — *Ingresos del mes*, *Gastos del mes*
+  y *Disponible*. Gastos y Disponible se muestran también como **% de los ingresos totales**.
+  Incluye una barra de consumo del ingreso y el detalle de gastos por categoría.
+- **Dashboard**: KPIs y gráficos de Ingresos vs Gastos, gastos por categoría,
+  Gastos vs Disponible (con %) y disponible mensual a lo largo del año.
+- **Ingresos** (ABM): alta/baja/edición de ingresos. Columnas *Descripción* y *Tipo*
+  (Sueldo / Honorarios / Otros), ambas obligatorias. Se cargan los montos de los 12 meses del año.
+- **Gastos** (ABM): alta/baja/edición de gastos. Columnas *Descripción* y *Categoría*
+  (Servicio, Educación, Salud, Deportes, Impuestos, Seguros, Hogar, Transporte, Otros),
+  ambas obligatorias. Se cargan los montos de los 12 meses del año.
+
+## Cálculos
+
+Para un mes y año dados:
+
+- **Ingresos del mes** = suma de todos los ingresos de ese mes.
+- **Gastos del mes** = suma de todos los gastos de ese mes.
+- **Disponible** = Ingresos − Gastos.
+- **% Gastos** = Gastos / Ingresos.
+- **% Disponible** = Disponible / Ingresos.
 
 ## Uso
 
-No requiere instalación. Cloná el repo y abrí `index.html`:
-
-```bash
-git clone <tu-repo>.git
-cd gastos-fijos
-# opción A: abrir index.html directamente en el navegador
-# opción B: servidor local (recomendado)
-python3 -m http.server 8000
-# luego visitar http://localhost:8000
-```
-
-> Los datos se guardan en el navegador (`localStorage`). Para pasarlos a otra máquina usá **Exportar** / **Importar**.
+Abrir `index.html` en el navegador. Los datos se guardan en `localStorage`.
+Botones *Exportar* / *Importar* para respaldar o mover los datos como JSON.
 
 ## Estructura
 
 ```
-gastos-fijos/
-├── index.html
-├── css/
-│   └── styles.css
-└── js/
-    ├── seed.js            # datos iniciales (hoja 2026)
-    ├── store.js           # estado + persistencia localStorage
-    ├── utils.js           # helpers (formato ARS, DOM, toast)
-    ├── app.js             # navegación e import/export
-    └── views/
-        ├── dashboard.js
-        ├── pagos.js
-        └── abm.js
+index.html
+css/styles.css
+js/
+  seed.js            datos iniciales (gastos e ingresos base)
+  store.js           estado + persistencia + agregados (KPIs)
+  utils.js           helpers (formato ARS, creación de nodos, toast)
+  views/
+    mes.js           vista "Mes Actual"
+    dashboard.js     vista "Dashboard"
+    ingresos.js      ABM de ingresos
+    abm.js           ABM de gastos
+  app.js             navegación e import/export
 ```
-
-## Modelo de datos
-
-```js
-gasto = {
-  id, banco, nombre, categoria,
-  byAnio: { 2026: { montos: [12 números], pagos: [12 booleanos] } }
-}
-```
-
-Cada gasto guarda montos y estado de pago por mes y por año, así podés navegar histórico y cargar años nuevos sin perder lo anterior.
-
-## Tecnología
-
-- HTML5 / CSS3 / JavaScript (ES6, sin dependencias de build)
-- [Chart.js](https://www.chartjs.org/) vía CDN para los gráficos
-
----
-
-Formato de moneda y fechas en configuración regional **es-AR**.
