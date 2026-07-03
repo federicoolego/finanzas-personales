@@ -315,3 +315,24 @@ tbody tr.row-sin:hover td { opacity: 1; }
 .block-title {
   font-size: 15px; font-weight: 600; margin: 8px 0 14px;
 }
+
+/* ---------- Gastos por categoría desplegable (Mes Actual) ---------- */
+.detalle-head {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px;
+}
+.detalle-actions { display: flex; gap: 8px; }
+
+tr.cat-head { cursor: pointer; user-select: none; }
+tr.cat-head td { background: var(--surface-2); font-weight: 600; }
+tr.cat-head:hover td { background: var(--border); }
+.caret {
+  display: inline-block; width: 16px; color: var(--text-dim);
+  font-size: 11px; margin-right: 4px;
+}
+tr.cat-head .badge.cat { font-weight: 600; }
+tr.cat-head .badge.sin { margin-left: 8px; }
+
+tr.gasto-row td:first-child { padding-left: 34px; }
+.gasto-nombre { display: flex; align-items: center; gap: 10px; }
+.gasto-nombre .badge.sin { font-size: 11px; }
