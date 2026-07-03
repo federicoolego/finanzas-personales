@@ -1,6 +1,7 @@
 // Vista Planilla: grilla editable tipo Excel para cargar montos por mes.
-// Selector Gastos/Ingresos, filtros de Año y Categoría, 12 meses siempre visibles
-// con el mes actual resaltado. Edición inline: guarda al perder el foco (blur).
+// Selector Gastos/Ingresos, filtros de Año, Categoría y Meses (multi-checkbox).
+// Por default se muestran el mes anterior, el actual y el posterior.
+// El mes actual queda resaltado. Edición inline: guarda al perder el foco (blur).
 
 const ViewPlanilla = (() => {
   const now = new Date();
@@ -9,11 +10,20 @@ const ViewPlanilla = (() => {
   let modo = "gastos";              // "gastos" | "ingresos"
   let catFiltro = "Todas";          // filtro de categoría/tipo
 
+  // Meses visibles (default: anterior, actual y posterior, acotado a 0-11)
+  function mesesPorDefecto() {
+    const set = new Set();
+    [mesActual - 1, mesActual, mesActual + 1].forEach(i => {
+      if (i >= 0 && i <= 11) set.add(i);
+    });
+    return set;
+  }
+  let mesesVisibles = mesesPorDefecto();
+
   function render(container) {
     const anios = Store.aniosDisponibles();
     if (!anios.includes(anio)) anio = anios[0];
 
-    // Opciones de categoría/tipo según el modo
     const esGastos = modo === "gastos";
     const cats = esGastos ? Store.categorias() : Store.tiposIngreso();
     const labelCat = esGastos ? "Categoría" : "Tipo";
@@ -35,7 +45,8 @@ const ViewPlanilla = (() => {
       el("div", { class: "filter" }, [el("label", {}, "Ver"), toggle]),
       filterSelect("Año", anios, anio, (v) => { anio = Number(v); render(container); }),
       filterSelect(labelCat, ["Todas", ...cats], catFiltro,
-        (v) => { catFiltro = v; render(container); })
+        (v) => { catFiltro = v; render(container); }),
+      buildMesesFilter(container)
     ]);
 
     const head = el("div", { class: "view-head" }, [
@@ -44,16 +55,51 @@ const ViewPlanilla = (() => {
         onClick: () => nuevaFila(container) }, esGastos ? "+ Nuevo gasto" : "+ Nuevo ingreso")
     ]);
 
-    const grilla = buildGrilla(container, esGastos, cats);
+    const grilla = buildGrilla(container, esGastos);
 
     const hint = el("div", { class: "planilla-hint muted" },
-      "Editá cualquier celda de monto y hacé clic afuera (o Tab) para guardar. " +
-      "El mes actual está resaltado.");
+      "Editá cualquier celda de monto y hacé clic afuera (o Enter) para guardar. " +
+      "Usá el filtro de Meses para elegir qué columnas ver. El mes actual está resaltado.");
 
     container.replaceChildren(head, filters, grilla, hint);
   }
 
-  function buildGrilla(container, esGastos, cats) {
+  // Filtro de meses con checkboxes (multi-selección) + accesos rápidos.
+  function buildMesesFilter(container) {
+    const checks = Store.MESES.map((m, i) => {
+      const cb = el("input", {
+        type: "checkbox", "data-mes": i,
+        onChange: (e) => {
+          if (e.target.checked) mesesVisibles.add(i);
+          else mesesVisibles.delete(i);
+          if (mesesVisibles.size === 0) mesesVisibles = mesesPorDefecto();
+          render(container);
+        }
+      });
+      if (mesesVisibles.has(i)) cb.checked = true;
+      return el("label", { class: "mes-check" + (i === mesActual ? " es-actual" : "") },
+        [cb, document.createTextNode(m.slice(0, 3))]);
+    });
+
+    const acciones = el("div", { class: "mes-check-actions" }, [
+      el("button", { class: "link-btn",
+        onClick: () => { mesesVisibles = new Set([...Array(12).keys()]); render(container); } }, "Todos"),
+      el("button", { class: "link-btn",
+        onClick: () => { mesesVisibles = mesesPorDefecto(); render(container); } }, "Actuales")
+    ]);
+
+    return el("div", { class: "filter filter-meses" }, [
+      el("label", {}, "Meses"),
+      el("div", { class: "mes-checks" }, [...checks, acciones])
+    ]);
+  }
+
+  // Índices de meses visibles, ordenados cronológicamente.
+  function mesesOrdenados() {
+    return [...mesesVisibles].sort((a, b) => a - b);
+  }
+
+  function buildGrilla(container, esGastos) {
     const items = (esGastos ? Store.all() : Store.allIngresos())
       .filter(x => catFiltro === "Todas"
         ? true
@@ -65,20 +111,25 @@ const ViewPlanilla = (() => {
         `Creá uno con el botón de arriba.`);
     }
 
-    // Encabezado: Descripción, Categoría/Tipo, 12 meses, Total
+    const meses = mesesOrdenados();
+    const esAnioActual = anio === now.getFullYear();
+
+    // Encabezado: Descripción, Categoría/Tipo, meses visibles (nombre completo), Total
     const ths = [
       el("th", { class: "col-desc" }, "Descripción"),
       el("th", { class: "col-cat" }, esGastos ? "Categoría" : "Tipo")
     ];
-    Store.MESES.forEach((m, i) => {
+    meses.forEach(i => {
       ths.push(el("th", {
-        class: "col-mes num" + (i === mesActual && anio === now.getFullYear() ? " mes-actual" : "")
-      }, m.slice(0, 3).toUpperCase()));
+        class: "col-mes num" + (i === mesActual && esAnioActual ? " mes-actual" : "")
+      }, Store.MESES[i].toUpperCase()));
     });
     ths.push(el("th", { class: "num col-total" }, "Total"));
 
-    // Filas de datos
-    const totalesMes = Array(12).fill(0);
+    // Filas de datos. El Total refleja los meses visibles.
+    const totalesMes = {};
+    meses.forEach(i => totalesMes[i] = 0);
+
     const bodyRows = items.map(it => {
       const ad = esGastos ? Store.anioData(it, anio) : Store.anioDataIng(it, anio);
       let totalFila = 0;
@@ -89,7 +140,7 @@ const ViewPlanilla = (() => {
           el("span", { class: "badge cat" }, esGastos ? it.categoria : it.tipo))
       ];
 
-      Store.MESES.forEach((m, i) => {
+      meses.forEach(i => {
         const valor = ad.montos[i] || 0;
         totalFila += valor;
         totalesMes[i] += valor;
@@ -104,19 +155,16 @@ const ViewPlanilla = (() => {
 
         input.addEventListener("blur", () => {
           const nuevo = parseFloat(input.value) || 0;
-          const guardado = esGastos
-            ? Store.setMontoGasto(it.id, anio, i, nuevo)
-            : Store.setMontoIngreso(it.id, anio, i, nuevo);
-          // Re-render para actualizar totales de fila/columna y el resaltado de vacío
+          if (esGastos) Store.setMontoGasto(it.id, anio, i, nuevo);
+          else Store.setMontoIngreso(it.id, anio, i, nuevo);
           render(container);
         });
-        // Enter mueve el foco (dispara blur -> guarda)
         input.addEventListener("keydown", (e) => {
           if (e.key === "Enter") { e.preventDefault(); input.blur(); }
         });
 
         celdas.push(el("td", {
-          class: "col-mes num" + (i === mesActual && anio === now.getFullYear() ? " mes-actual" : "")
+          class: "col-mes num" + (i === mesActual && esAnioActual ? " mes-actual" : "")
         }, input));
       });
 
@@ -124,17 +172,17 @@ const ViewPlanilla = (() => {
       return el("tr", {}, celdas);
     });
 
-    // Fila de totales por mes
+    // Fila de totales por mes (solo meses visibles)
     const footCells = [
       el("td", { class: "col-desc" }, "Totales"),
       el("td", { class: "col-cat" }, "")
     ];
     let totalGeneral = 0;
-    totalesMes.forEach((t, i) => {
-      totalGeneral += t;
+    meses.forEach(i => {
+      totalGeneral += totalesMes[i];
       footCells.push(el("td", {
-        class: "col-mes num" + (i === mesActual && anio === now.getFullYear() ? " mes-actual" : "")
-      }, fmtARS(t)));
+        class: "col-mes num" + (i === mesActual && esAnioActual ? " mes-actual" : "")
+      }, fmtARS(totalesMes[i])));
     });
     footCells.push(el("td", { class: "num col-total" }, fmtARS(totalGeneral)));
 
