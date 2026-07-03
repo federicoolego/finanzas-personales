@@ -11,6 +11,7 @@
 
   const views = {
     mes: ViewMes,
+    planilla: ViewPlanilla,
     dashboard: ViewDashboard,
     ingresos: ViewIngresos,
     abm: ViewABM

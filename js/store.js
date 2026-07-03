@@ -150,6 +150,26 @@ const Store = (() => {
     return [...set].sort((a, b) => b - a);
   }
 
+  // ---------- EDICIÓN PUNTUAL (grilla tipo planilla) ----------
+  // Setea el monto de un gasto para un mes (0-11) de un año. Devuelve el valor guardado.
+  function setMontoGasto(id, anio, mesIdx, valor) {
+    const g = state.gastos.find(x => x.id === id);
+    if (!g) return 0;
+    const v = Math.max(0, Number(valor) || 0);
+    anioData(g, anio).montos[mesIdx] = v;
+    save();
+    return v;
+  }
+  // Setea el monto de un ingreso para un mes (0-11) de un año. Devuelve el valor guardado.
+  function setMontoIngreso(id, anio, mesIdx, valor) {
+    const i = state.ingresos.find(x => x.id === id);
+    if (!i) return 0;
+    const v = Math.max(0, Number(valor) || 0);
+    anioDataIng(i, anio).montos[mesIdx] = v;
+    save();
+    return v;
+  }
+
   // ---------- AGREGADOS (KPIs) ----------
   // Total de ingresos de un mes (0-11) para un año.
   function totalIngresosMes(anio, mesIdx) {
@@ -184,6 +204,7 @@ const Store = (() => {
     load, save,
     all, anioData, categorias, add, update, remove,
     allIngresos, anioDataIng, tiposIngreso, addIngreso, updateIngreso, removeIngreso,
+    setMontoGasto, setMontoIngreso,
     aniosDisponibles, totalIngresosMes, totalGastosMes,
     exportJSON, importJSON, reset
   };
