@@ -4,6 +4,7 @@
   Store.load();
 
   const app = document.getElementById("app");
+  document.getElementById("modal").hidden = true; // arranca siempre cerrado
   ViewABM.bindModal(app);
 
   const views = {
