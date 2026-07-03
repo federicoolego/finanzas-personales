@@ -15,17 +15,15 @@ const ViewPagos = (() => {
         (v) => { mes = Store.MESES.indexOf(v); render(container); })
     ]);
 
-    // datos del mes seleccionado
-    const gastos = Store.all().filter(g => {
-      const ad = Store.anioData(g, anio);
-      return ad.montos[mes] > 0; // sólo gastos con monto en ese mes
-    });
+    // Mostramos TODOS los gastos, tengan o no monto cargado en el mes.
+    const gastos = Store.all();
 
-    let totalMes = 0, totalPagado = 0, totalFalta = 0, cantPagados = 0;
+    let totalMes = 0, totalPagado = 0, totalFalta = 0, cantPagados = 0, sinCargar = 0;
     gastos.forEach(g => {
       const ad = Store.anioData(g, anio);
       const monto = ad.montos[mes];
       totalMes += monto;
+      if (monto <= 0) sinCargar++;
       if (ad.pagos[mes]) { totalPagado += monto; cantPagados++; }
       else totalFalta += monto;
     });
@@ -35,13 +33,13 @@ const ViewPagos = (() => {
       kpi("Pagado", fmtARS(totalPagado), `${cantPagados} de ${gastos.length}`, "info"),
       kpi("Falta pagar", fmtARS(totalFalta), `${gastos.length - cantPagados} pendientes`,
         totalFalta > 0 ? "danger" : ""),
-      kpi("% completado", (gastos.length ? Math.round(cantPagados / gastos.length * 100) : 0) + "%",
-        `${Store.MESES[mes]} ${anio}`, "warn")
+      kpi("Sin monto cargado", String(sinCargar),
+        `${Store.MESES[mes]} ${anio}`, sinCargar > 0 ? "warn" : "")
     ]);
 
     const body = gastos.length
       ? buildTable(gastos, container)
-      : el("div", { class: "empty" }, `No hay gastos con monto cargado para ${Store.MESES[mes]} ${anio}.`);
+      : el("div", { class: "empty" }, "No hay gastos cargados. Agregalos desde la pestaña “Gastos (ABM)”.");
 
     const head = el("div", { class: "view-head" }, [
       el("h2", {}, `Pagos · ${Store.MESES[mes]} ${anio}`)
@@ -61,6 +59,7 @@ const ViewPagos = (() => {
         const ad = Store.anioData(g, anio);
         const monto = ad.montos[mes];
         const pago = ad.pagos[mes];
+        const sinMonto = monto <= 0;
         if (pago) tPagado += monto; else tFalta += monto;
 
         const toggle = el("div", {
@@ -69,13 +68,17 @@ const ViewPagos = (() => {
           onClick: () => { Store.togglePago(g.id, anio, mes); render(container); }
         });
 
-        rows.push(el("tr", {}, [
+        let estadoHtml;
+        if (sinMonto) estadoHtml = `<span class="badge sin">● Sin monto cargado</span>`;
+        else if (pago) estadoHtml = `<span class="badge pagado">● Pagado</span>`;
+        else estadoHtml = `<span class="badge falta">● Falta pagar</span>`;
+
+        rows.push(el("tr", { class: sinMonto ? "row-sin" : "" }, [
           el("td", {}, g.nombre),
           el("td", { class: "muted" }, g.banco || "—"),
-          el("td", { class: "num" }, fmtARS(monto)),
-          el("td", { html: pago
-            ? `<span class="badge pagado">● Pagado</span>`
-            : `<span class="badge falta">● Falta pagar</span>` }),
+          el("td", { class: "num" + (sinMonto ? " muted" : "") },
+            sinMonto ? "— sin cargar —" : fmtARS(monto)),
+          el("td", { html: estadoHtml }),
           el("td", {}, toggle)
         ]));
       });
