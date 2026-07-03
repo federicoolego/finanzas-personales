@@ -4,12 +4,15 @@
   Store.load();
 
   const app = document.getElementById("app");
-  document.getElementById("modal").hidden = true; // arranca siempre cerrado
+  document.getElementById("modal").hidden = true;      // arranca cerrado
+  document.getElementById("modal-ing").hidden = true;  // arranca cerrado
   ViewABM.bindModal(app);
+  ViewIngresos.bindModal(app);
 
   const views = {
+    mes: ViewMes,
     dashboard: ViewDashboard,
-    pagos: ViewPagos,
+    ingresos: ViewIngresos,
     abm: ViewABM
   };
 
@@ -26,7 +29,7 @@
   document.getElementById("btn-export").addEventListener("click", () => {
     const blob = new Blob([Store.exportJSON()], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = el("a", { href: url, download: `gastos-fijos-${Date.now()}.json` });
+    const a = el("a", { href: url, download: `finanzas-familiar-${Date.now()}.json` });
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(url);
     toast("Datos exportados");
@@ -52,5 +55,6 @@
     reader.readAsText(file);
   });
 
-  show("dashboard");
+  // Pantalla principal al cargar: Mes Actual
+  show("mes");
 })();
