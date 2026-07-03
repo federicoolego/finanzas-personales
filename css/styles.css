@@ -389,3 +389,28 @@ tr.gasto-row td:first-child { padding-left: 34px; }
 .cell-input[type=number] { -moz-appearance: textfield; }
 
 .planilla-hint { font-size: 12px; margin-top: 12px; }
+
+/* ---------- Filtro de meses (checkboxes) en Planilla ---------- */
+.filter-meses { flex: 1 1 100%; }
+.mes-checks {
+  display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+}
+.mes-check {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 13px; color: var(--text-dim); cursor: pointer;
+  user-select: none; padding: 2px 4px; border-radius: 6px;
+}
+.mes-check:hover { color: var(--text); }
+.mes-check input { min-width: 0; width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); }
+.mes-check.es-actual { color: var(--accent); font-weight: 600; }
+.mes-check-actions { display: inline-flex; gap: 10px; margin-left: auto; }
+.link-btn {
+  background: none; border: none; color: var(--info); cursor: pointer;
+  font-size: 12px; font-weight: 600; padding: 2px 4px;
+}
+.link-btn:hover { text-decoration: underline; }
+
+/* con nombre completo, las columnas de mes necesitan algo más de ancho */
+.planilla-table .col-mes { width: auto; min-width: 110px; }
