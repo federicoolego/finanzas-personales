@@ -1,4 +1,4 @@
-// Vista ABM: alta, baja y modificación de gastos fijos.
+// Vista Gastos (ABM): alta, baja y modificación de gastos (Finanzas Familiar).
 
 const ViewABM = (() => {
   let anio = new Date().getFullYear();
@@ -8,7 +8,7 @@ const ViewABM = (() => {
     if (!anios.includes(anio)) anio = anios[0];
 
     const head = el("div", { class: "view-head" }, [
-      el("h2", {}, "Gestión de gastos fijos"),
+      el("h2", {}, "Gastos"),
       el("button", { class: "btn-primary", onClick: () => openModal(null) }, "+ Nuevo gasto")
     ]);
 
@@ -31,14 +31,13 @@ const ViewABM = (() => {
       const grupo = gastos.filter(g => g.categoria === cat);
       if (!grupo.length) return;
       rows.push(el("tr", { class: "section-row" }, [
-        el("td", { colspan: "5" }, cat)
+        el("td", { colspan: "4" }, cat)
       ]));
       grupo.forEach(g => {
         const ad = Store.anioData(g, anio);
         const total = ad.montos.reduce((a, b) => a + b, 0);
         rows.push(el("tr", {}, [
           el("td", {}, g.nombre),
-          el("td", { class: "muted" }, g.banco || "—"),
           el("td", { html: `<span class="badge cat">${g.categoria}</span>` }),
           el("td", { class: "num" }, fmtARS(total)),
           el("td", { class: "num" }, [
@@ -59,8 +58,7 @@ const ViewABM = (() => {
 
     const table = el("table", {}, [
       el("thead", {}, el("tr", {}, [
-        el("th", {}, "Gasto"),
-        el("th", {}, "Banco / Medio"),
+        el("th", {}, "Descripción"),
         el("th", {}, "Categoría"),
         el("th", { class: "num" }, `Total ${anio}`),
         el("th", { class: "num" }, "Acciones")
@@ -78,13 +76,18 @@ const ViewABM = (() => {
     const title = document.getElementById("modal-title");
     document.getElementById("f-id").value = gasto ? gasto.id : "";
     document.getElementById("f-nombre").value = gasto ? gasto.nombre : "";
-    document.getElementById("f-banco").value = gasto ? gasto.banco : "";
-    document.getElementById("f-categoria").value = gasto ? gasto.categoria : "Gastos Fijos";
     title.textContent = gasto ? "Editar gasto" : "Nuevo gasto";
 
-    // datalist de bancos
-    const dl = document.getElementById("bancos-list");
-    dl.replaceChildren(...Store.bancos().map(b => el("option", { value: b })));
+    // select de categorías (genéricas)
+    const selCat = document.getElementById("f-categoria");
+    const cur = gasto ? gasto.categoria : "";
+    const opts = [...Store.CATEGORIAS_GASTO];
+    if (cur && !opts.includes(cur)) opts.push(cur);
+    selCat.replaceChildren(
+      el("option", { value: "", disabled: "true" }, "Seleccioná una categoría"),
+      ...opts.map(c => el("option", { value: c }, c))
+    );
+    selCat.value = cur || "";
 
     // inputs de montos
     const wrap = document.getElementById("montos-inputs");
@@ -106,25 +109,24 @@ const ViewABM = (() => {
     e.preventDefault();
     const id = document.getElementById("f-id").value;
     const nombre = document.getElementById("f-nombre").value.trim();
-    const banco = document.getElementById("f-banco").value.trim();
     const categoria = document.getElementById("f-categoria").value;
-    if (!nombre) { toast("El nombre es obligatorio"); return; }
+    if (!nombre) { toast("La descripción es obligatoria"); return; }
+    if (!categoria) { toast("La categoría es obligatoria"); return; }
     const montos = [...document.querySelectorAll("#montos-inputs input")]
       .sort((a, b) => a.dataset.mes - b.dataset.mes)
       .map(i => parseFloat(i.value) || 0);
 
     if (id) {
-      Store.update(Number(id), { banco, nombre, categoria, anio, montos });
+      Store.update(Number(id), { nombre, categoria, anio, montos });
       toast("Gasto actualizado");
     } else {
-      Store.add({ banco, nombre, categoria, anio, montos });
+      Store.add({ nombre, categoria, anio, montos });
       toast("Gasto creado");
     }
     closeModal();
     render(container);
   }
 
-  // Enganche de los botones del modal (una sola vez)
   function bindModal(container) {
     document.getElementById("modal-close").onclick = closeModal;
     document.getElementById("btn-cancel").onclick = closeModal;
