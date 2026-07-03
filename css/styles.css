@@ -201,7 +201,12 @@ tfoot td {
 }
 .badge.pagado { background: rgba(63,185,80,.15); color: var(--accent); }
 .badge.falta { background: rgba(248,81,73,.15); color: var(--danger); }
+.badge.sin { background: rgba(210,153,34,.15); color: var(--warn); }
 .badge.cat { background: var(--surface-2); color: var(--text-dim); font-weight: 500; }
+
+/* fila de gasto sin monto cargado en el mes */
+.row-sin td { opacity: .72; }
+tbody tr.row-sin:hover td { opacity: 1; }
 
 /* pay toggle */
 .pay-toggle {
@@ -278,4 +283,35 @@ tfoot td {
   .montos-inputs { grid-template-columns: repeat(2, 1fr); }
   .topbar { gap: 12px; }
   #app { padding: 16px; }
+}
+
+/* ---------- Extensiones Finanzas Familiar ---------- */
+.req { color: var(--danger); font-weight: 700; }
+
+.kpi-grid-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+/* Barra de consumo del ingreso */
+.prog-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; margin-bottom: 24px;
+}
+.prog-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 10px; font-size: 13px; color: var(--text-dim);
+}
+.prog-pct { font-size: 18px; font-weight: 700; color: var(--text); }
+.prog-track {
+  width: 100%; height: 14px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 999px; overflow: hidden;
+}
+.prog-fill {
+  height: 100%; background: var(--accent);
+  border-radius: 999px; transition: width .3s ease;
+}
+.prog-fill.warn { background: var(--warn); }
+.prog-fill.over { background: var(--danger); }
+.prog-sub { font-size: 12px; margin-top: 8px; }
+
+.block-title {
+  font-size: 15px; font-weight: 600; margin: 8px 0 14px;
 }
