@@ -9,11 +9,12 @@ const Store = (() => {
   const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
     "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
-  const CATEGORIAS_GASTO = ["Servicio", "Educación", "Salud", "Deportes",
-    "Impuestos", "Seguros", "Hogar", "Transporte", "Otros"];
+  const CATEGORIAS_GASTO = ["Servicio", "Servicios Profesionales", "Educación",
+    "Salud", "Deportes", "Impuestos", "Seguros", "Hogar", "Transporte",
+    "Tarjeta de Crédito", "Deudas", "Otros"];
   const TIPOS_INGRESO = ["Sueldo", "Honorarios", "Otros"];
 
-  let state = { gastos: [], ingresos: [], nextId: 1, nextIngId: 1 };
+  let state = { gastos: [], ingresos: [], nextId: 1, nextIngId: 1, aniosExtra: [] };
 
   function seedState() {
     const gastos = SEED_GASTOS.map(g => ({
@@ -31,7 +32,8 @@ const Store = (() => {
     return {
       gastos, ingresos,
       nextId: gastos.length + 1,
-      nextIngId: ingresos.length + 1
+      nextIngId: ingresos.length + 1,
+      aniosExtra: []
     };
   }
 
@@ -42,6 +44,7 @@ const Store = (() => {
         const parsed = JSON.parse(raw);
         if (!parsed.ingresos) parsed.ingresos = [];
         if (!parsed.nextIngId) parsed.nextIngId = (parsed.ingresos.length || 0) + 1;
+        if (!parsed.aniosExtra) parsed.aniosExtra = [];
         state = parsed;
         return;
       } catch (e) { /* fall through */ }
@@ -139,8 +142,21 @@ const Store = (() => {
     const set = new Set();
     state.gastos.forEach(g => Object.keys(g.byAnio).forEach(a => set.add(Number(a))));
     state.ingresos.forEach(i => Object.keys(i.byAnio).forEach(a => set.add(Number(a))));
+    (state.aniosExtra || []).forEach(a => set.add(Number(a)));
     set.add(new Date().getFullYear());
     return [...set].sort((a, b) => b - a);
+  }
+
+  // Registra un año nuevo (aunque todavía no tenga montos) para que aparezca
+  // en los selectores. Devuelve true si se agregó, false si ya existía.
+  function addAnio(anio) {
+    anio = Number(anio);
+    if (!anio || Number.isNaN(anio)) return false;
+    if (aniosDisponibles().includes(anio)) return false;
+    if (!state.aniosExtra) state.aniosExtra = [];
+    state.aniosExtra.push(anio);
+    save();
+    return true;
   }
 
   // ---------- AGREGADOS (KPIs) ----------
@@ -165,6 +181,7 @@ const Store = (() => {
     }
     if (!parsed.ingresos) parsed.ingresos = [];
     if (!parsed.nextIngId) parsed.nextIngId = parsed.ingresos.length + 1;
+    if (!parsed.aniosExtra) parsed.aniosExtra = [];
     state = parsed;
     save();
   }
@@ -176,7 +193,7 @@ const Store = (() => {
     load, save,
     all, anioData, categorias, add, update, remove,
     allIngresos, anioDataIng, tiposIngreso, addIngreso, updateIngreso, removeIngreso,
-    aniosDisponibles, totalIngresosMes, totalGastosMes,
+    aniosDisponibles, addAnio, totalIngresosMes, totalGastosMes,
     exportJSON, importJSON, reset
   };
 })();
