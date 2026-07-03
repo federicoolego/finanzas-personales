@@ -10,7 +10,7 @@ const ViewMes = (() => {
     if (!anios.includes(anio)) anio = anios[0];
 
     const filters = el("div", { class: "filters" }, [
-      filterSelect("Año", anios, anio, (v) => { anio = Number(v); render(container); }),
+      anioFilter(anios, anio, (v) => { anio = Number(v); render(container); }),
       filterSelect("Mes", Store.MESES, Store.MESES[mes],
         (v) => { mes = Store.MESES.indexOf(v); render(container); })
     ]);

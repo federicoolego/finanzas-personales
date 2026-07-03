@@ -13,7 +13,7 @@ const ViewABM = (() => {
     ]);
 
     const filters = el("div", { class: "filters" }, [
-      filterSelect("Año", anios, anio, (v) => { anio = Number(v); rerender(container); })
+      anioFilter(anios, anio, (v) => { anio = Number(v); rerender(container); })
     ]);
 
     const gastos = Store.all();
@@ -149,4 +149,33 @@ function filterSelect(label, options, value, onChange) {
     })
   );
   return el("div", { class: "filter" }, [el("label", {}, label), sel]);
+}
+
+// Filtro de Año con botón "+ Año" para crear un año nuevo (vacío).
+// onSelect(anio) se llama al cambiar el select o al crear un año.
+function anioFilter(anios, value, onSelect) {
+  const sel = el("select", { onChange: (e) => onSelect(Number(e.target.value)) },
+    anios.map(o => {
+      const opt = el("option", { value: String(o) }, String(o));
+      if (String(o) === String(value)) opt.selected = true;
+      return opt;
+    })
+  );
+  const btn = el("button", {
+    class: "btn-sm add-anio",
+    title: "Agregar un año nuevo",
+    onClick: () => {
+      const sugerido = Math.max(...anios) + 1;
+      const val = prompt("¿Qué año querés agregar?", String(sugerido));
+      if (val === null) return;
+      const anio = parseInt(val, 10);
+      if (!anio || anio < 2000 || anio > 2100) { toast("Ingresá un año válido"); return; }
+      if (Store.addAnio(anio)) { toast(`Año ${anio} agregado`); onSelect(anio); }
+      else { toast(`El año ${anio} ya existe`); onSelect(anio); }
+    }
+  }, "+ Año");
+  return el("div", { class: "filter" }, [
+    el("label", {}, "Año"),
+    el("div", { class: "anio-row" }, [sel, btn])
+  ]);
 }
