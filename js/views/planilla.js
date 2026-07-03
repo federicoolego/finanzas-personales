@@ -149,8 +149,20 @@ const ViewPlanilla = (() => {
         const ad = esGastos ? Store.anioData(it, anio) : Store.anioDataIng(it, anio);
         let totalFila = 0;
 
+        // Marca "sin monto cargado" según el mes actual (solo si estamos en el año actual)
+        const sinMontoMesActual = esAnioActual && (ad.montos[mesActual] || 0) <= 0;
+
         const celdas = [
-          el("td", { class: "col-desc" }, it.nombre),
+          el("td", { class: "col-desc" }, [
+            el("span", { class: "gasto-nombre" }, [
+              document.createTextNode(it.nombre),
+              sinMontoMesActual
+                ? el("span", { class: "badge sin",
+                    title: `Sin monto cargado en ${Store.MESES[mesActual]}` },
+                    "● Sin monto cargado")
+                : null
+            ])
+          ]),
           el("td", { class: "col-cat" },
             el("span", { class: "badge cat" }, esGastos ? it.categoria : it.tipo))
         ];
