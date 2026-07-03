@@ -1,11 +1,10 @@
-// Datos iniciales pre-cargados desde la hoja 2026 del Excel de gastos
+// Datos iniciales pre-cargados desde la hoja 2026 del Excel
 const SEED_ANIO = 2026;
 const SEED_GASTOS = [
   {
     "id": 1,
-    "banco": "Brubank",
     "nombre": "Luz",
-    "categoria": "Gastos Fijos",
+    "categoria": "Servicio",
     "montos": [
       134690.84,
       137732.21,
@@ -19,27 +18,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 2,
-    "banco": "Brubank",
     "nombre": "Gas",
-    "categoria": "Gastos Fijos",
+    "categoria": "Servicio",
     "montos": [
       20178.32,
       20733.05,
@@ -53,27 +37,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 3,
-    "banco": "Brubank",
     "nombre": "ABSA",
-    "categoria": "Gastos Fijos",
+    "categoria": "Servicio",
     "montos": [
       6887.26,
       6887.26,
@@ -87,27 +56,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 4,
-    "banco": "Cuenta DNI",
     "nombre": "ABL (10003650)",
-    "categoria": "Gastos Fijos",
+    "categoria": "Impuestos",
     "montos": [
       0,
       0,
@@ -121,27 +75,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 5,
-    "banco": "Cuenta DNI",
     "nombre": "AGUA (10003650)",
-    "categoria": "Gastos Fijos",
+    "categoria": "Servicio",
     "montos": [
       0,
       0,
@@ -155,27 +94,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 6,
-    "banco": "Galicia",
     "nombre": "Seguro Auto",
-    "categoria": "Gastos Fijos",
+    "categoria": "Seguros",
     "montos": [
       68377.0,
       68377.0,
@@ -189,27 +113,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 7,
-    "banco": "Galicia",
     "nombre": "Seguro de Vida",
-    "categoria": "Gastos Fijos",
+    "categoria": "Seguros",
     "montos": [
       2017.52,
       2017.52,
@@ -223,27 +132,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 8,
-    "banco": "Galicia",
     "nombre": "Seguro de Hogar",
-    "categoria": "Gastos Fijos",
+    "categoria": "Seguros",
     "montos": [
       50365.2,
       50365.2,
@@ -257,27 +151,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 9,
-    "banco": "Brubank",
     "nombre": "Patente",
-    "categoria": "Gastos Fijos",
+    "categoria": "Impuestos",
     "montos": [
       0,
       0,
@@ -291,27 +170,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 10,
-    "banco": "Brubank",
     "nombre": "Teléfono Fede",
-    "categoria": "Gastos Fijos",
+    "categoria": "Servicio",
     "montos": [
       14000.0,
       14000.0,
@@ -325,27 +189,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 11,
-    "banco": "Brubank",
     "nombre": "Fibertel",
-    "categoria": "Gastos Fijos",
+    "categoria": "Servicio",
     "montos": [
       84000.0,
       86073.99,
@@ -359,27 +208,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 12,
-    "banco": "Brubank",
     "nombre": "Monotributo Flor",
-    "categoria": "Gastos Fijos",
+    "categoria": "Impuestos",
     "montos": [
       13663.17,
       15616.17,
@@ -393,27 +227,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 13,
-    "banco": "Mercadopago",
     "nombre": "VEP Sonia",
-    "categoria": "Gastos Fijos",
+    "categoria": "Otros",
     "montos": [
       13076.37,
       13727.08,
@@ -427,27 +246,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 14,
-    "banco": "Mercadopago",
     "nombre": "Ingles (Lolo)",
-    "categoria": "Gastos Fijos",
+    "categoria": "Educación",
     "montos": [
       0,
       0,
@@ -461,27 +265,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 15,
-    "banco": "Mercadopago",
     "nombre": "Defensores",
-    "categoria": "Gastos Fijos",
+    "categoria": "Deportes",
     "montos": [
       66000.0,
       74000.0,
@@ -495,27 +284,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 16,
-    "banco": "Mercadopago",
     "nombre": "Velez Sarsfield",
-    "categoria": "Gastos Fijos",
+    "categoria": "Deportes",
     "montos": [
       24300.0,
       24300.0,
@@ -529,27 +303,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 17,
-    "banco": "Mercadopago",
     "nombre": "Mercadopago",
-    "categoria": "Tarjetas de Crédito",
+    "categoria": "Otros",
     "montos": [
       399241.65,
       1360218.15,
@@ -563,27 +322,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 18,
-    "banco": "Galicia",
     "nombre": "Galicia - Visa",
-    "categoria": "Tarjetas de Crédito",
+    "categoria": "Otros",
     "montos": [
       664588.41,
       396913.32,
@@ -597,27 +341,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 19,
-    "banco": "Galicia",
     "nombre": "Galicia - Mastercard",
-    "categoria": "Tarjetas de Crédito",
+    "categoria": "Otros",
     "montos": [
       336690.4,
       308089.88,
@@ -631,27 +360,12 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
     ]
   },
   {
     "id": 20,
-    "banco": "Brubank",
     "nombre": "Banco Provincia - Visa - Flor",
-    "categoria": "Tarjetas de Crédito",
+    "categoria": "Otros",
     "montos": [
       206259.56,
       111460.21,
@@ -665,20 +379,48 @@ const SEED_GASTOS = [
       0,
       0,
       0
-    ],
-    "pagos": [
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
+    ]
+  }
+];
+
+// Ingresos base (los montos se cargan desde el ABM de Ingresos)
+const SEED_INGRESOS = [
+  {
+    "id": 1,
+    "nombre": "Sueldo Fede",
+    "tipo": "Sueldo",
+    "montos": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "id": 2,
+    "nombre": "Sueldo Flor",
+    "tipo": "Sueldo",
+    "montos": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
     ]
   }
 ];
