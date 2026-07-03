@@ -2,6 +2,7 @@
 
 const ViewIngresos = (() => {
   let anio = new Date().getFullYear();
+  let onSavedExterno = null; // callback opcional al guardar desde otra vista
 
   function render(container) {
     const anios = Store.aniosDisponibles();
@@ -100,7 +101,7 @@ const ViewIngresos = (() => {
     modal.hidden = false;
   }
 
-  function closeModal() { document.getElementById("modal-ing").hidden = true; }
+  function closeModal() { onSavedExterno = null; document.getElementById("modal-ing").hidden = true; }
 
   function submit(e, container) {
     e.preventDefault();
@@ -120,8 +121,16 @@ const ViewIngresos = (() => {
       Store.addIngreso({ nombre, tipo, anio, montos });
       toast("Ingreso creado");
     }
+    const cb = onSavedExterno;
     closeModal();
-    render(container);
+    if (cb) cb(); else render(container);
+  }
+
+  // Abre el modal en modo alta desde otra vista (ej. Planilla).
+  function openModalExterno(onSaved, usarAnio) {
+    if (usarAnio) anio = Number(usarAnio);
+    onSavedExterno = onSaved || null;
+    openModal(null);
   }
 
   function bindModal(container) {
@@ -133,5 +142,5 @@ const ViewIngresos = (() => {
     });
   }
 
-  return { render, bindModal };
+  return { render, bindModal, openModalExterno };
 })();

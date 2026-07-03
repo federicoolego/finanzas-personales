@@ -2,6 +2,7 @@
 
 const ViewABM = (() => {
   let anio = new Date().getFullYear();
+  let onSavedExterno = null; // callback opcional al guardar desde otra vista
 
   function render(container) {
     const anios = Store.aniosDisponibles();
@@ -103,7 +104,7 @@ const ViewABM = (() => {
     modal.hidden = false;
   }
 
-  function closeModal() { document.getElementById("modal").hidden = true; }
+  function closeModal() { onSavedExterno = null; document.getElementById("modal").hidden = true; }
 
   function submit(e, container) {
     e.preventDefault();
@@ -123,8 +124,17 @@ const ViewABM = (() => {
       Store.add({ nombre, categoria, anio, montos });
       toast("Gasto creado");
     }
+    const cb = onSavedExterno;
     closeModal();
-    render(container);
+    if (cb) cb(); else render(container);
+  }
+
+  // Abre el modal en modo alta desde otra vista (ej. Planilla).
+  // usarAnio fija el año destino; onSaved se ejecuta tras guardar.
+  function openModalExterno(onSaved, usarAnio) {
+    if (usarAnio) anio = Number(usarAnio);
+    onSavedExterno = onSaved || null;
+    openModal(null);
   }
 
   function bindModal(container) {
@@ -136,7 +146,7 @@ const ViewABM = (() => {
     });
   }
 
-  return { render, bindModal };
+  return { render, bindModal, openModalExterno };
 })();
 
 // helper de filtro reutilizable
