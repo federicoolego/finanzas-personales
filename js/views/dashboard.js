@@ -17,7 +17,7 @@ const ViewDashboard = (() => {
     const mesesOpts = ["Todos", ...Store.MESES];
 
     const filters = el("div", { class: "filters" }, [
-      anioFilter(anios, anio, (v) => { anio = Number(v); render(container); }),
+      filterSelect("Año", anios, anio, (v) => { anio = Number(v); render(container); }),
       filterSelect("Mes", mesesOpts, mes === "Todos" ? "Todos" : Store.MESES[mes],
         (v) => { mes = v === "Todos" ? "Todos" : Store.MESES.indexOf(v); render(container); })
     ]);

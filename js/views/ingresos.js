@@ -13,7 +13,7 @@ const ViewIngresos = (() => {
     ]);
 
     const filters = el("div", { class: "filters" }, [
-      anioFilter(anios, anio, (v) => { anio = Number(v); rerender(container); })
+      filterSelect("Año", anios, anio, (v) => { anio = Number(v); rerender(container); })
     ]);
 
     const ingresos = Store.allIngresos();
