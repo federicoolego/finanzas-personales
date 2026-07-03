@@ -48,7 +48,9 @@ const ViewDashboard = (() => {
 
     const chartGrid = el("div", { class: "chart-grid" }, [
       el("div", { class: "chart-card full" }, [
-        el("h3", {}, `Evolución mensual — ${anio}`),
+        el("h3", {}, mes === "Todos"
+          ? `Evolución mensual — ${anio}`
+          : `Evolución — ${Store.MESES[mes]} ${anio}`),
         el("div", { class: "chart-wrap" }, cEvolucion)
       ]),
       el("div", { class: "chart-card" }, [
@@ -129,13 +131,20 @@ const ViewDashboard = (() => {
         if (ad.pagos[i]) pagadoMes[i] += ad.montos[i];
       }
     });
+
+    // Si hay un mes filtrado, mostramos sólo ese mes; si no, el año completo.
+    const idxs = mes === "Todos" ? [...Array(12).keys()] : [mes];
+    const labels = idxs.map(i => Store.MESES[i]);
+    const dataTotal = idxs.map(i => totalMes[i]);
+    const dataPagado = idxs.map(i => pagadoMes[i]);
+
     charts.push(new Chart(canvas, {
       type: "bar",
       data: {
-        labels: Store.MESES,
+        labels,
         datasets: [
-          { label: "Total", data: totalMes, backgroundColor: "rgba(88,166,255,.55)", borderRadius: 4 },
-          { label: "Pagado", data: pagadoMes, backgroundColor: "rgba(63,185,80,.75)", borderRadius: 4 }
+          { label: "Total", data: dataTotal, backgroundColor: "rgba(88,166,255,.55)", borderRadius: 4 },
+          { label: "Pagado", data: dataPagado, backgroundColor: "rgba(63,185,80,.75)", borderRadius: 4 }
         ]
       },
       options: axisOpts()
