@@ -108,7 +108,7 @@ const ViewABM = (() => {
   function submit(e, container) {
     e.preventDefault();
     const id = document.getElementById("f-id").value;
-    const nombre = document.getElementById("f-nombre").value.trim();
+    const nombre = document.getElementById("f-nombre").value.trim().toUpperCase();
     const categoria = document.getElementById("f-categoria").value;
     if (!nombre) { toast("La descripción es obligatoria"); return; }
     if (!categoria) { toast("La categoría es obligatoria"); return; }
