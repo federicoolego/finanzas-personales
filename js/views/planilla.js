@@ -113,6 +113,7 @@ const ViewPlanilla = (() => {
 
     const meses = mesesOrdenados();
     const esAnioActual = anio === now.getFullYear();
+    const colCount = 2 + meses.length + 1; // desc + cat + meses + total
 
     // Encabezado: Descripción, Categoría/Tipo, meses visibles (nombre completo), Total
     const ths = [
@@ -126,50 +127,65 @@ const ViewPlanilla = (() => {
     });
     ths.push(el("th", { class: "num col-total" }, "Total"));
 
-    // Filas de datos. El Total refleja los meses visibles.
+    // Agrupamos por categoría (gastos) o tipo (ingresos), respetando el orden
+    // de la lista canónica, y dentro de cada grupo ordenamos por descripción.
+    const grupos = esGastos ? Store.categorias() : Store.tiposIngreso();
     const totalesMes = {};
     meses.forEach(i => totalesMes[i] = 0);
 
-    const bodyRows = items.map(it => {
-      const ad = esGastos ? Store.anioData(it, anio) : Store.anioDataIng(it, anio);
-      let totalFila = 0;
+    const bodyRows = [];
+    grupos.forEach(grupo => {
+      const delGrupo = items
+        .filter(x => (esGastos ? x.categoria : x.tipo) === grupo)
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+      if (!delGrupo.length) return;
 
-      const celdas = [
-        el("td", { class: "col-desc" }, it.nombre),
-        el("td", { class: "col-cat" },
-          el("span", { class: "badge cat" }, esGastos ? it.categoria : it.tipo))
-      ];
+      // Fila separadora de grupo
+      bodyRows.push(el("tr", { class: "section-row" }, [
+        el("td", { colspan: String(colCount) }, grupo)
+      ]));
 
-      meses.forEach(i => {
-        const valor = ad.montos[i] || 0;
-        totalFila += valor;
-        totalesMes[i] += valor;
+      delGrupo.forEach(it => {
+        const ad = esGastos ? Store.anioData(it, anio) : Store.anioDataIng(it, anio);
+        let totalFila = 0;
 
-        const input = el("input", {
-          type: "number", step: "0.01", min: "0",
-          class: "cell-input" + (valor <= 0 ? " vacio" : ""),
-          value: valor || "",
-          "data-id": it.id, "data-mes": i,
-          placeholder: "0"
+        const celdas = [
+          el("td", { class: "col-desc" }, it.nombre),
+          el("td", { class: "col-cat" },
+            el("span", { class: "badge cat" }, esGastos ? it.categoria : it.tipo))
+        ];
+
+        meses.forEach(i => {
+          const valor = ad.montos[i] || 0;
+          totalFila += valor;
+          totalesMes[i] += valor;
+
+          const input = el("input", {
+            type: "number", step: "0.01", min: "0",
+            class: "cell-input" + (valor <= 0 ? " vacio" : ""),
+            value: valor || "",
+            "data-id": it.id, "data-mes": i,
+            placeholder: "0"
+          });
+
+          input.addEventListener("blur", () => {
+            const nuevo = parseFloat(input.value) || 0;
+            if (esGastos) Store.setMontoGasto(it.id, anio, i, nuevo);
+            else Store.setMontoIngreso(it.id, anio, i, nuevo);
+            render(container);
+          });
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+          });
+
+          celdas.push(el("td", {
+            class: "col-mes num" + (i === mesActual && esAnioActual ? " mes-actual" : "")
+          }, input));
         });
 
-        input.addEventListener("blur", () => {
-          const nuevo = parseFloat(input.value) || 0;
-          if (esGastos) Store.setMontoGasto(it.id, anio, i, nuevo);
-          else Store.setMontoIngreso(it.id, anio, i, nuevo);
-          render(container);
-        });
-        input.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") { e.preventDefault(); input.blur(); }
-        });
-
-        celdas.push(el("td", {
-          class: "col-mes num" + (i === mesActual && esAnioActual ? " mes-actual" : "")
-        }, input));
+        celdas.push(el("td", { class: "num col-total" }, fmtARS(totalFila)));
+        bodyRows.push(el("tr", {}, celdas));
       });
-
-      celdas.push(el("td", { class: "num col-total" }, fmtARS(totalFila)));
-      return el("tr", {}, celdas);
     });
 
     // Fila de totales por mes (solo meses visibles)
