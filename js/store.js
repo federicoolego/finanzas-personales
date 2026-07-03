@@ -138,25 +138,16 @@ const Store = (() => {
   }
 
   // ---------- AÑOS ----------
+  // Años que siempre están disponibles en los selectores, aunque no tengan datos.
+  const ANIOS_FIJOS = [2027, 2028, 2029, 2030];
+
   function aniosDisponibles() {
     const set = new Set();
     state.gastos.forEach(g => Object.keys(g.byAnio).forEach(a => set.add(Number(a))));
     state.ingresos.forEach(i => Object.keys(i.byAnio).forEach(a => set.add(Number(a))));
-    (state.aniosExtra || []).forEach(a => set.add(Number(a)));
+    ANIOS_FIJOS.forEach(a => set.add(a));
     set.add(new Date().getFullYear());
     return [...set].sort((a, b) => b - a);
-  }
-
-  // Registra un año nuevo (aunque todavía no tenga montos) para que aparezca
-  // en los selectores. Devuelve true si se agregó, false si ya existía.
-  function addAnio(anio) {
-    anio = Number(anio);
-    if (!anio || Number.isNaN(anio)) return false;
-    if (aniosDisponibles().includes(anio)) return false;
-    if (!state.aniosExtra) state.aniosExtra = [];
-    state.aniosExtra.push(anio);
-    save();
-    return true;
   }
 
   // ---------- AGREGADOS (KPIs) ----------
@@ -193,7 +184,7 @@ const Store = (() => {
     load, save,
     all, anioData, categorias, add, update, remove,
     allIngresos, anioDataIng, tiposIngreso, addIngreso, updateIngreso, removeIngreso,
-    aniosDisponibles, addAnio, totalIngresosMes, totalGastosMes,
+    aniosDisponibles, totalIngresosMes, totalGastosMes,
     exportJSON, importJSON, reset
   };
 })();
