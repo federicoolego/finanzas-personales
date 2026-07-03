@@ -46,6 +46,8 @@ const ViewDashboard = (() => {
     const cTop = el("canvas");
     const cEstado = el("canvas");
 
+    const periodo = mes === "Todos" ? `${anio}` : `${Store.MESES[mes]} ${anio}`;
+
     const chartGrid = el("div", { class: "chart-grid" }, [
       el("div", { class: "chart-card full" }, [
         el("h3", {}, mes === "Todos"
@@ -54,15 +56,15 @@ const ViewDashboard = (() => {
         el("div", { class: "chart-wrap" }, cEvolucion)
       ]),
       el("div", { class: "chart-card" }, [
-        el("h3", {}, "Distribución por categoría"),
+        el("h3", {}, `Distribución por categoría — ${periodo}`),
         el("div", { class: "chart-wrap" }, cCategoria)
       ]),
       el("div", { class: "chart-card" }, [
-        el("h3", {}, "Pagado vs. Falta pagar"),
+        el("h3", {}, `Pagado vs. Falta pagar — ${periodo}`),
         el("div", { class: "chart-wrap" }, cEstado)
       ]),
       el("div", { class: "chart-card full" }, [
-        el("h3", {}, "Top gastos del período"),
+        el("h3", {}, `Top gastos — ${periodo}`),
         el("div", { class: "chart-wrap" }, cTop)
       ])
     ]);
