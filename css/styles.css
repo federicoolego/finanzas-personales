@@ -218,6 +218,8 @@ tfoot td {
 .pay-toggle.on::after { transform: translateX(20px); background: var(--accent); }
 
 /* ---------- Modal ---------- */
+[hidden] { display: none !important; }
+
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.65);
   display: flex; align-items: center; justify-content: center; z-index: 100;
