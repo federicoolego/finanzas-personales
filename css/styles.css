@@ -414,3 +414,9 @@ tr.gasto-row td:first-child { padding-left: 34px; }
 
 /* con nombre completo, las columnas de mes necesitan algo más de ancho */
 .planilla-table .col-mes { width: auto; min-width: 110px; }
+
+/* fila separadora de grupo dentro de la planilla (con scroll horizontal) */
+.planilla-table .section-row td {
+  position: sticky; left: 0;
+  background: var(--surface-2);
+}
