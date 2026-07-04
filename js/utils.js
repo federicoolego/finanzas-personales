@@ -1,12 +1,21 @@
-// Utilidades compartidas.
+// Utilidades compartidas
 
 const fmtARS = (n) =>
   new Intl.NumberFormat("es-AR", {
     style: "currency", currency: "ARS", maximumFractionDigits: 0
   }).format(n || 0);
 
-const fmtNum = (n) =>
-  new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(n || 0);
+// Parsea texto tipeado por el usuario a número (tolera "$", puntos de miles, comas)
+function parseMonto(txt) {
+  if (typeof txt === "number") return txt;
+  if (!txt) return 0;
+  const limpio = String(txt)
+    .replace(/[^\d,.-]/g, "")   // saca $, espacios, letras
+    .replace(/\./g, "")          // saca separador de miles
+    .replace(",", ".");          // coma decimal -> punto
+  const n = parseFloat(limpio);
+  return isNaN(n) ? 0 : n;
+}
 
 const el = (tag, attrs = {}, children = []) => {
   const node = document.createElement(tag);
@@ -33,8 +42,5 @@ function toast(msg) {
   toastTimer = setTimeout(() => (t.hidden = true), 2600);
 }
 
-// Paleta consistente para categorías/series en los gráficos.
-const CHART_COLORS = [
-  "#3fb950", "#58a6ff", "#bc8cff", "#d29922", "#f85149",
-  "#39c5cf", "#ec6cb9", "#a5d6ff", "#e3b341", "#7ee787"
-];
+const uid = () =>
+  Date.now().toString(36) + Math.random().toString(36).slice(2, 8);

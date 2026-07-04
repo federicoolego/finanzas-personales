@@ -1,211 +1,121 @@
-// Store: maneja el estado y la persistencia en localStorage.
-// Modelo de datos (Finanzas Familiar):
-//   gasto   = { id, nombre, categoria, byAnio: { [anio]: { montos:[12] } } }
-//   ingreso = { id, nombre, tipo,      byAnio: { [anio]: { montos:[12] } } }
-// El seed original (js/seed.js) trae los datos de la hoja 2026.
+// ============================================================
+//  STORE — estado y persistencia
+// ============================================================
+//  Modelo de datos:
+//    item = { id, categoria: "ingreso"|"gasto"|"reserva", nombre, monto, orden }
+//
+//  Si config.js tiene URL + clave de Supabase  -> guarda en la nube
+//  (tabla "items"), compartido entre dispositivos.
+//  Si no                                        -> guarda en localStorage
+//  (solo en este navegador).
+// ============================================================
 
 const Store = (() => {
-  const KEY = "finanzas_familiar_app_v2";
-  const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
-    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const LS_KEY = "calc_familiar_v1";
+  const usaSupabase = !!(SUPABASE_URL && SUPABASE_ANON);
+  let sb = null;
+  let items = [];
 
-  const CATEGORIAS_GASTO = ["Deportes", "Deudas", "Educación", "Hogar",
-    "Impuestos", "Reservas", "Salud", "Seguros", "Servicio",
-    "Servicios Profesionales", "Tarjeta de Crédito", "Transporte", "Otros"];
-  const TIPOS_INGRESO = ["Sueldo", "Honorarios", "Otros"];
-
-  let state = { gastos: [], ingresos: [], nextId: 1, nextIngId: 1, aniosExtra: [] };
-
-  function seedState() {
-    const gastos = SEED_GASTOS.map(g => ({
-      id: g.id,
-      nombre: g.nombre,
-      categoria: g.categoria,
-      byAnio: { [SEED_ANIO]: { montos: g.montos.slice() } }
-    }));
-    const ingresos = (typeof SEED_INGRESOS !== "undefined" ? SEED_INGRESOS : []).map(i => ({
-      id: i.id,
-      nombre: i.nombre,
-      tipo: i.tipo,
-      byAnio: { [SEED_ANIO]: { montos: i.montos.slice() } }
-    }));
-    return {
-      gastos, ingresos,
-      nextId: gastos.length + 1,
-      nextIngId: ingresos.length + 1,
-      aniosExtra: []
-    };
+  // ---- Datos iniciales (los de tu planilla) ----
+  function seed() {
+    const s = (categoria, lista) =>
+      lista.map((x, i) => ({
+        id: uid(), categoria, nombre: x[0], monto: x[1], orden: i
+      }));
+    return [
+      ...s("ingreso", [
+        ["Sueldo Fede", 7000000],
+        ["Flor", 1100000],
+        ["Tarjeta Edenred", 135000],
+      ]),
+      ...s("gasto", [
+        ["Servicios + Impuestos", 1000000],
+        ["Tarjetas de Crédito", 650000],
+        ["Mercadopago TC", 3800000],
+        ["Casa - Cuota Préstamo", 1550000],
+        ["Casa - Deuda Franco", 750000],
+        ["Sonia + Miriam", 100000],
+      ]),
+      ...s("reserva", [
+        ["Ahorros", 100000],
+        ["Fondo emergencia", 100000],
+        ["Inversiones", 100000],
+      ]),
+    ];
   }
 
-  function load() {
-    const raw = localStorage.getItem(KEY);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (!parsed.ingresos) parsed.ingresos = [];
-        if (!parsed.nextIngId) parsed.nextIngId = (parsed.ingresos.length || 0) + 1;
-        if (!parsed.aniosExtra) parsed.aniosExtra = [];
-        state = parsed;
-        return;
-      } catch (e) { /* fall through */ }
+  // ---------- CARGA ----------
+  async function load() {
+    if (usaSupabase) {
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+      const { data, error } = await sb
+        .from("items").select("*").order("orden", { ascending: true });
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        // primera vez: sembrar en la nube
+        items = seed();
+        await sb.from("items").insert(items);
+      } else {
+        items = data;
+      }
+    } else {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        try { items = JSON.parse(raw); }
+        catch { items = seed(); saveLocal(); }
+      } else {
+        items = seed();
+        saveLocal();
+      }
     }
-    state = seedState();
-    save();
   }
 
-  function save() {
-    localStorage.setItem(KEY, JSON.stringify(state));
+  function saveLocal() {
+    localStorage.setItem(LS_KEY, JSON.stringify(items));
   }
 
-  // ---------- GASTOS ----------
-  function all() { return state.gastos; }
-
-  function anioData(gasto, anio) {
-    if (!gasto.byAnio[anio]) {
-      gasto.byAnio[anio] = { montos: Array(12).fill(0) };
-    }
-    // migración: descartar 'pagos' si viniera de un modelo anterior
-    if (gasto.byAnio[anio].pagos) delete gasto.byAnio[anio].pagos;
-    return gasto.byAnio[anio];
+  // ---------- LECTURA ----------
+  function porCategoria(cat) {
+    return items
+      .filter(i => i.categoria === cat)
+      .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
   }
 
-  function categorias() {
-    // categorías presentes en los datos, respetando el orden de la lista canónica
-    const usadas = new Set(state.gastos.map(g => g.categoria));
-    const ordenadas = CATEGORIAS_GASTO.filter(c => usadas.has(c));
-    const extras = [...usadas].filter(c => !CATEGORIAS_GASTO.includes(c));
-    return [...ordenadas, ...extras];
+  function total(cat) {
+    return porCategoria(cat).reduce((a, i) => a + (Number(i.monto) || 0), 0);
   }
 
-  function add({ nombre, categoria, anio, montos }) {
-    const g = {
-      id: state.nextId++,
-      nombre, categoria,
-      byAnio: { [anio]: { montos: montos.slice() } }
-    };
-    state.gastos.push(g);
-    save();
-    return g;
+  function balance() {
+    return total("ingreso") - total("gasto") - total("reserva");
   }
 
-  function update(id, { nombre, categoria, anio, montos }) {
-    const g = state.gastos.find(x => x.id === id);
-    if (!g) return;
-    g.nombre = nombre; g.categoria = categoria;
-    anioData(g, anio).montos = montos.slice();
-    save();
+  // ---------- ESCRITURA ----------
+  async function add(categoria, nombre, monto) {
+    const orden = porCategoria(categoria).length;
+    const item = { id: uid(), categoria, nombre, monto: Number(monto) || 0, orden };
+    items.push(item);
+    if (usaSupabase) await sb.from("items").insert(item);
+    else saveLocal();
+    return item;
   }
 
-  function remove(id) {
-    state.gastos = state.gastos.filter(g => g.id !== id);
-    save();
+  async function update(id, campos) {
+    const it = items.find(i => i.id === id);
+    if (!it) return;
+    Object.assign(it, campos);
+    if (usaSupabase) await sb.from("items").update(campos).eq("id", id);
+    else saveLocal();
   }
 
-  // ---------- INGRESOS ----------
-  function allIngresos() { return state.ingresos; }
-
-  function anioDataIng(ingreso, anio) {
-    if (!ingreso.byAnio[anio]) {
-      ingreso.byAnio[anio] = { montos: Array(12).fill(0) };
-    }
-    return ingreso.byAnio[anio];
+  async function remove(id) {
+    items = items.filter(i => i.id !== id);
+    if (usaSupabase) await sb.from("items").delete().eq("id", id);
+    else saveLocal();
   }
-
-  function tiposIngreso() { return TIPOS_INGRESO.slice(); }
-
-  function addIngreso({ nombre, tipo, anio, montos }) {
-    const i = {
-      id: state.nextIngId++,
-      nombre, tipo,
-      byAnio: { [anio]: { montos: montos.slice() } }
-    };
-    state.ingresos.push(i);
-    save();
-    return i;
-  }
-
-  function updateIngreso(id, { nombre, tipo, anio, montos }) {
-    const i = state.ingresos.find(x => x.id === id);
-    if (!i) return;
-    i.nombre = nombre; i.tipo = tipo;
-    anioDataIng(i, anio).montos = montos.slice();
-    save();
-  }
-
-  function removeIngreso(id) {
-    state.ingresos = state.ingresos.filter(i => i.id !== id);
-    save();
-  }
-
-  // ---------- AÑOS ----------
-  // Años que siempre están disponibles en los selectores, aunque no tengan datos.
-  const ANIOS_FIJOS = [2027, 2028, 2029, 2030];
-
-  function aniosDisponibles() {
-    const set = new Set();
-    state.gastos.forEach(g => Object.keys(g.byAnio).forEach(a => set.add(Number(a))));
-    state.ingresos.forEach(i => Object.keys(i.byAnio).forEach(a => set.add(Number(a))));
-    ANIOS_FIJOS.forEach(a => set.add(a));
-    set.add(new Date().getFullYear());
-    return [...set].sort((a, b) => b - a);
-  }
-
-  // ---------- EDICIÓN PUNTUAL (grilla tipo planilla) ----------
-  // Setea el monto de un gasto para un mes (0-11) de un año. Devuelve el valor guardado.
-  function setMontoGasto(id, anio, mesIdx, valor) {
-    const g = state.gastos.find(x => x.id === id);
-    if (!g) return 0;
-    const v = Math.max(0, Number(valor) || 0);
-    anioData(g, anio).montos[mesIdx] = v;
-    save();
-    return v;
-  }
-  // Setea el monto de un ingreso para un mes (0-11) de un año. Devuelve el valor guardado.
-  function setMontoIngreso(id, anio, mesIdx, valor) {
-    const i = state.ingresos.find(x => x.id === id);
-    if (!i) return 0;
-    const v = Math.max(0, Number(valor) || 0);
-    anioDataIng(i, anio).montos[mesIdx] = v;
-    save();
-    return v;
-  }
-
-  // ---------- AGREGADOS (KPIs) ----------
-  // Total de ingresos de un mes (0-11) para un año.
-  function totalIngresosMes(anio, mesIdx) {
-    return state.ingresos.reduce((acc, i) =>
-      acc + (anioDataIng(i, anio).montos[mesIdx] || 0), 0);
-  }
-  // Total de gastos (Finanzas Familiar) de un mes.
-  function totalGastosMes(anio, mesIdx) {
-    return state.gastos.reduce((acc, g) =>
-      acc + (anioData(g, anio).montos[mesIdx] || 0), 0);
-  }
-
-  // ---------- IMPORT / EXPORT ----------
-  function exportJSON() { return JSON.stringify(state, null, 2); }
-
-  function importJSON(text) {
-    const parsed = JSON.parse(text);
-    if (!parsed.gastos || !Array.isArray(parsed.gastos)) {
-      throw new Error("Formato inválido");
-    }
-    if (!parsed.ingresos) parsed.ingresos = [];
-    if (!parsed.nextIngId) parsed.nextIngId = parsed.ingresos.length + 1;
-    if (!parsed.aniosExtra) parsed.aniosExtra = [];
-    state = parsed;
-    save();
-  }
-
-  function reset() { state = seedState(); save(); }
 
   return {
-    MESES, CATEGORIAS_GASTO, TIPOS_INGRESO,
-    load, save,
-    all, anioData, categorias, add, update, remove,
-    allIngresos, anioDataIng, tiposIngreso, addIngreso, updateIngreso, removeIngreso,
-    setMontoGasto, setMontoIngreso,
-    aniosDisponibles, totalIngresosMes, totalGastosMes,
-    exportJSON, importJSON, reset
+    usaSupabase, load,
+    porCategoria, total, balance,
+    add, update, remove
   };
 })();
