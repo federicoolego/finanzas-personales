@@ -143,8 +143,8 @@
     ctx.fillText("Calculadora Familiar", 100, 100);
     ctx.fillStyle = "#9a92b5";
     ctx.font = "500 22px 'Inter', system-ui, sans-serif";
-    const fecha = new Date().toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" });
-    ctx.fillText("Resumen del " + fecha, 100, 135);
+    const mesLabel = (window.MonthLabel && window.MonthLabel.label) || new Date().toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" });
+    ctx.fillText("Resumen · " + mesLabel, 100, 135);
 
     // Bloques de totales
     const bloques = [
@@ -223,9 +223,10 @@
   }
 
   function textoResumen({ ing, gas, res, bal, neg }) {
+    const mesLabel = (window.MonthLabel && window.MonthLabel.label) || new Date().toLocaleDateString("es-AR");
     return [
       "*Calculadora Familiar*",
-      "Resumen del " + new Date().toLocaleDateString("es-AR"),
+      "Resumen · " + mesLabel,
       "",
       "➕ Ingresos: " + fmtARS(ing),
       "➖ Gastos Fijos: " + fmtARS(gas),
