@@ -26,7 +26,7 @@ const Store = (() => {
       ...s("ingreso", [
         ["Sueldo Fede", 6000000],
         ["Flor", 1100000],
-        ["Mercadopago TC", 0],
+        ["Mercadopago TC", 1700000],
       ]),
       ...s("gasto", [
         ["Servicios + Impuestos", 650000],
