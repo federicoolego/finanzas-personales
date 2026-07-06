@@ -24,22 +24,26 @@ const Store = (() => {
       }));
     return [
       ...s("ingreso", [
-        ["Sueldo Fede", 7000000],
+        ["Sueldo Fede", 6000000],
         ["Flor", 1100000],
-        ["Tarjeta Edenred", 135000],
+        ["Mercadopago TC", 0],
       ]),
       ...s("gasto", [
-        ["Servicios + Impuestos", 1000000],
+        ["Servicios + Impuestos", 650000],
         ["Tarjetas de Crédito", 650000],
-        ["Mercadopago TC", 3800000],
-        ["Casa - Cuota Préstamo", 1550000],
-        ["Casa - Deuda Franco", 750000],
-        ["Sonia + Miriam", 100000],
+        ["Mercadopago TC", 1700000],
+        ["Casa - Cuota Préstamo", 1520000],
+        ["Casa - Deuda Franco", 900000],
+        ["Sonia", 560000],
+        ["Mirian", 120000],
+        ["Lolo - Fono", 115000],
       ]),
       ...s("reserva", [
-        ["Ahorros", 100000],
+        ["Mercadopago TC", 1700000],        
         ["Fondo emergencia", 100000],
+        ["Ahorros", 100000],
         ["Inversiones", 100000],
+        
       ]),
     ];
   }
