@@ -199,3 +199,44 @@ body {
   .add-item { width: calc(100% - 24px); margin-left: 12px; margin-right: 12px; }
   .res-valor { font-size: 1.5rem; }
 }
+
+/* ---------- WhatsApp FAB (draggable) ---------- */
+.wa-fab {
+  position: fixed;
+  /* left/top se setean por JS. right/bottom iniciales sirven mientras carga */
+  right: 24px; bottom: 24px;
+  z-index: 9999;
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: #25D366;
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(37,211,102,.35), 0 4px 10px rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center;
+  cursor: grab;
+  touch-action: none;      /* clave para que el drag funcione en móvil */
+  user-select: none;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.wa-fab:hover { background: #1ebe5a; transform: scale(1.05); }
+.wa-fab:active { cursor: grabbing; }
+.wa-fab.dragging {
+  cursor: grabbing;
+  transform: scale(1.1);
+  box-shadow: 0 14px 32px rgba(37,211,102,.5), 0 6px 14px rgba(0,0,0,.5);
+  transition: none;        /* mientras arrastra: sin lag */
+}
+.wa-fab.loading {
+  opacity: .7; pointer-events: none;
+  animation: wa-pulse 1s ease-in-out infinite;
+}
+@keyframes wa-pulse {
+  0%,100% { transform: scale(1);    }
+  50%     { transform: scale(1.08); }
+}
+.wa-fab svg { pointer-events: none; }
+
+@media (max-width: 480px) {
+  .wa-fab { width: 56px; height: 56px; }
+  .wa-fab svg { width: 26px; height: 26px; }
+}
