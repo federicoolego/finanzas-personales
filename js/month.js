@@ -9,76 +9,58 @@ window.MonthLabel = (function () {
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ];
 
-  const now = new Date();
-  const currYear = now.getFullYear();
-
-  // Rango: año anterior, actual y siguiente (36 opciones)
-  function buildOptions() {
-    const opts = [];
-    for (let y = currYear - 1; y <= currYear + 1; y++) {
-      for (let m = 0; m < 12; m++) {
-        opts.push({ value: `${y}-${String(m + 1).padStart(2, "0")}`, y, m });
-      }
-    }
-    return opts;
-  }
+  const YEAR = new Date().getFullYear();
+  const CURR_MONTH = new Date().getMonth(); // 0-11
 
   function loadSaved() {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw && /^\d{4}-\d{2}$/.test(raw)) return raw;
+      const n = parseInt(raw, 10);
+      if (Number.isInteger(n) && n >= 0 && n <= 11) return n;
     } catch (_) {}
     return null;
   }
-  function save(v) { try { localStorage.setItem(KEY, v); } catch (_) {} }
-
-  function currentValue() {
-    return `${currYear}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  }
-
-  function labelFrom(value) {
-    const [y, m] = value.split("-").map(Number);
-    return `${MESES[m - 1]} ${y}`;
-  }
+  function save(m) { try { localStorage.setItem(KEY, String(m)); } catch (_) {} }
 
   const listeners = new Set();
   function onChange(fn) { listeners.add(fn); }
 
-  let selected;
+  let selectedMonth;
+
+  function labelFor(m) { return `${MESES[m]} ${YEAR}`; }
 
   function init() {
     const sel   = document.getElementById("month-select");
     const title = document.getElementById("month-title");
     if (!sel || !title) return;
 
-    // Rellenar options
-    const opts = buildOptions();
-    for (const o of opts) {
+    // 12 opciones fijas
+    for (let m = 0; m < 12; m++) {
       const opt = document.createElement("option");
-      opt.value = o.value;
-      opt.textContent = `${MESES[o.m]} ${o.y}`;
+      opt.value = String(m);
+      opt.textContent = MESES[m];
       sel.appendChild(opt);
     }
 
     // Estado inicial: guardado > mes actual
-    selected = loadSaved() || currentValue();
-    sel.value = selected;
-    title.textContent = labelFrom(selected);
+    const saved = loadSaved();
+    selectedMonth = saved !== null ? saved : CURR_MONTH;
+    sel.value = String(selectedMonth);
+    title.textContent = labelFor(selectedMonth);
 
     sel.addEventListener("change", () => {
-      selected = sel.value;
-      title.textContent = labelFrom(selected);
-      save(selected);
-      listeners.forEach(fn => { try { fn(selected); } catch (_) {} });
+      selectedMonth = parseInt(sel.value, 10);
+      title.textContent = labelFor(selectedMonth);
+      save(selectedMonth);
+      listeners.forEach(fn => { try { fn(selectedMonth); } catch (_) {} });
     });
   }
 
-  // API pública
   return {
     init,
     onChange,
-    get value() { return selected || currentValue(); },
-    get label() { return labelFrom(selected || currentValue()); },
+    get value() { return selectedMonth != null ? selectedMonth : CURR_MONTH; },
+    get label() { return labelFor(selectedMonth != null ? selectedMonth : CURR_MONTH); },
   };
 })();
 
