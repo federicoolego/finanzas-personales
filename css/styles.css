@@ -240,3 +240,71 @@ body {
   .wa-fab { width: 56px; height: 56px; }
   .wa-fab svg { width: 26px; height: 26px; }
 }
+
+/* ---------- Month bar ---------- */
+.month-bar {
+  padding: 18px 22px 0;
+}
+.month-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  box-shadow: var(--shadow);
+}
+.month-title {
+  margin: 0;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.month-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.month-select-label {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.month-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 34px 8px 12px;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%239a92b5' stroke-width='2'><path d='M1 1l5 5 5-5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.month-select:hover { border-color: var(--accent); }
+.month-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(167,139,250,.2);
+}
+.month-select option { background: var(--bg-2); color: var(--text); }
+
+@media (max-width: 480px) {
+  .month-bar { padding: 14px 14px 0; }
+  .month-bar-inner { padding: 12px 14px; }
+  .month-title { font-size: 18px; }
+}
