@@ -23,24 +23,26 @@ const filters = { anio: [], mes: [], reserva: [], lastN: null };
 const el = (id) => document.getElementById(id);
 
 // ---------- Formateadores ----------
-const fmtARS = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
-const fmtUSD = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
+const fmtARS = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtUSD = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtPct = (v) => (v == null || !isFinite(v)) ? "–" : `${v > 0 ? "+" : ""}${v.toFixed(1)}%`;
 function money(monto, moneda) {
+  // Versión compacta para ticks de charts (K / M)
   if (monto == null || !isFinite(monto)) return "–";
   const abs = Math.abs(monto);
   const compact = abs >= 1e6
     ? (monto / 1e6).toFixed(abs >= 1e7 ? 1 : 2) + "M"
     : abs >= 1e3
-      ? (monto / 1e3).toFixed(0) + "K"
-      : String(Math.round(monto));
+      ? (monto / 1e3).toFixed(1) + "K"
+      : monto.toFixed(0);
   const sym = moneda === "ARS" ? "$" : "US$";
   return `${sym} ${compact}`;
 }
 function moneyFull(monto, moneda) {
+  // Versión completa con 2 decimales para KPIs, tooltips y tabla
   if (monto == null || !isFinite(monto)) return "–";
   const sym = moneda === "ARS" ? "$" : "US$";
-  return `${sym} ${(moneda === "ARS" ? fmtARS : fmtUSD).format(Math.round(monto))}`;
+  return `${sym} ${(moneda === "ARS" ? fmtARS : fmtUSD).format(monto)}`;
 }
 
 // ---------- Init ----------

@@ -296,9 +296,11 @@
   // ====================================================================
   function todayISO() {
     const d = new Date();
-    // por defecto, último día del mes en curso
-    const last = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-    return last.toISOString().slice(0, 10);
+    // ISO local (no UTC) para evitar corrimiento por timezone
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
   }
 
   async function openReservaForm(row) {
@@ -325,7 +327,7 @@
       <form id="reserva-form" class="admin-form">
         <div class="admin-form-row">
           <label style="flex:1">Fecha
-            <input type="date" name="fecha" required value="${isEdit ? row.fecha : todayISO()}">
+            <input type="date" name="fecha" required value="${isEdit ? row.fecha : todayISO()}" max="${todayISO()}">
           </label>
           <label style="flex:1">Moneda
             <select name="moneda" required>

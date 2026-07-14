@@ -677,3 +677,13 @@ body.admin-modal-open { overflow: hidden; }
   align-items: center;
   flex-shrink: 0;
 }
+
+/* Ícono del calendario visible en dark mode */
+.admin-form input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+  opacity: 0.8;
+}
+.admin-form input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
