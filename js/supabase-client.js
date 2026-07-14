@@ -2,8 +2,8 @@
 // Completá con tu URL y anon key después de correr sql/schema.sql en tu proyecto.
 // La anon key es pública, va acá tranquilo (RLS protege la escritura).
 
-const SUPABASE_URL      = "https://TU-PROYECTO.supabase.co";
-const SUPABASE_ANON_KEY = "TU_ANON_KEY_ACA";
+const SUPABASE_URL      = "https://exufbmxwzrrklxiqgopy.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_BaihXY-vto6-OKhkpkbUaw_Y79cMCw7";
 
 if (!window.supabase) {
   console.error("El SDK de Supabase no cargó. Revisá el <script> del CDN en index.html.");
