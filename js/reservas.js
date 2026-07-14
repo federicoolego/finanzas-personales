@@ -474,6 +474,58 @@ function renderStackedBar(canvasId, key, mon, ts) {
   });
 }
 
+function renderDeltaBar(canvasId, key, mon, ts) {
+  destroyChart(key);
+  const ctx = el(canvasId);
+  const totals = ts.totals[mon] || [];
+  // Delta vs mes anterior. El primer período no tiene comparación → null (barra vacía).
+  const deltas = totals.map((v, i) => i === 0 ? null : (v - totals[i - 1]));
+  const colorUp = "#4ade80";
+  const colorDown = "#f87171";
+  const bg = deltas.map(d => d == null ? "rgba(0,0,0,0)" : (d >= 0 ? colorUp : colorDown));
+
+  charts[key] = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ts.periodos.map(labelPeriodo),
+      datasets: [{
+        label: "Aporte neto",
+        data: deltas,
+        backgroundColor: bg,
+        borderColor: bg,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const v = ctx.parsed.y;
+              if (v == null) return "Sin período previo";
+              const sign = v > 0 ? "+" : "";
+              return `${sign}${moneyFull(v, mon)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: "#8b949e" }, grid: { color: "rgba(255,255,255,0.04)" } },
+        y: {
+          ticks: { color: "#8b949e", callback: (v) => money(v, mon) },
+          grid: {
+            color: (ctx) => ctx.tick.value === 0 ? "rgba(139,148,158,0.4)" : "rgba(255,255,255,0.06)",
+            lineWidth: (ctx) => ctx.tick.value === 0 ? 1.5 : 1
+          }
+        }
+      }
+    }
+  });
+}
+
 // ---------- Tabla ----------
 function renderTable(rows) {
   const body = el("tabla-body");
@@ -526,6 +578,8 @@ function render() {
   renderDonut("chart-donut-usd", "donutUsd", "USD", ts);
   renderStackedBar("chart-stack-ars", "stackArs", "ARS", ts);
   renderStackedBar("chart-stack-usd", "stackUsd", "USD", ts);
+  renderDeltaBar("chart-delta-ars", "deltaArs", "ARS", ts);
+  renderDeltaBar("chart-delta-usd", "deltaUsd", "USD", ts);
   renderTable(filtered);
 }
 
