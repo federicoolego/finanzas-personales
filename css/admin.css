@@ -687,3 +687,136 @@ body.admin-modal-open { overflow: hidden; }
 .admin-form input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
+/* =====================================================================
+   Modo Solo lectura / Edición + FAB WhatsApp + Tarjeta de captura
+   ===================================================================== */
+
+/* Los elementos con .authed-only sólo se muestran con sesión activa. */
+.authed-only { display: none !important; }
+body.is-authed .authed-only { display: inline-flex !important; }
+body.is-authed #wa-share-fab.authed-only { display: flex !important; }
+
+/* -------- Toggle Solo lectura / Edición -------- */
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--panel);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.mode-toggle:hover {
+  background: var(--panel-2);
+  color: var(--text);
+  border-color: var(--accent);
+}
+.mode-toggle-icon { font-size: 15px; line-height: 1; }
+.mode-toggle.editing {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(74, 222, 128, 0.08);
+}
+
+/* -------- FAB WhatsApp -------- */
+.wa-fab {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #25D366;
+  color: #fff;
+  border: none;
+  box-shadow: 0 8px 22px rgba(37, 211, 102, 0.35), 0 2px 6px rgba(0,0,0,0.35);
+  cursor: pointer;
+  z-index: 45;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, background 0.15s;
+}
+.wa-fab:hover { background: #1ebe5c; transform: translateY(-2px); }
+.wa-fab:active { transform: translateY(0); }
+.wa-fab:disabled, .wa-fab.loading { opacity: 0.7; cursor: wait; }
+.wa-fab.loading { animation: waPulse 1.1s ease-in-out infinite; }
+@keyframes waPulse {
+  0%, 100% { box-shadow: 0 8px 22px rgba(37, 211, 102, 0.35); }
+  50%      { box-shadow: 0 8px 30px rgba(37, 211, 102, 0.75); }
+}
+
+@media (max-width: 520px) {
+  .wa-fab { width: 52px; height: 52px; right: 16px; bottom: 16px; }
+  .wa-fab svg { width: 24px; height: 24px; }
+  .mode-toggle { padding: 6px 10px; font-size: 12px; }
+  .mode-toggle-label { display: none; }
+}
+
+/* -------- Tarjeta usada para capturar imagen (off-screen) -------- */
+.wa-share-card {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 720px;
+  padding: 32px;
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: 'Inter', system-ui, sans-serif;
+  border: 1px solid #30363d;
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+.wa-share-card .wa-header { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #30363d; }
+.wa-share-card .wa-eyebrow {
+  font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+  color: #4ade80; font-weight: 600;
+}
+.wa-share-card .wa-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 34px; font-weight: 700; line-height: 1.1; margin: 4px 0 6px;
+}
+.wa-share-card .wa-owner { font-size: 13px; color: #8b949e; }
+.wa-share-card .wa-filters {
+  margin-top: 10px; padding: 8px 12px;
+  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+  font-size: 13px; color: #c9d1d9;
+}
+.wa-share-card .wa-section { margin-top: 18px; }
+.wa-share-card .wa-section-title {
+  font-size: 15px; font-weight: 600; color: #e6edf3;
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.wa-share-card .wa-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+}
+.wa-share-card .wa-badge.ars { background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.35); }
+.wa-share-card .wa-badge.usd { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.35); }
+
+.wa-share-card .wa-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.wa-share-card .wa-kpi {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 12px 10px;
+  min-width: 0;
+}
+.wa-share-card .wa-kpi.hi { border-color: rgba(74, 222, 128, 0.4); background: rgba(74, 222, 128, 0.06); }
+.wa-share-card .wa-kpi-label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+.wa-share-card .wa-kpi-value { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; margin-top: 4px; line-height: 1.1; color: #e6edf3; }
+.wa-share-card .wa-kpi-sub   { font-size: 11px; color: #8b949e; margin-top: 3px; min-height: 14px; }
+.wa-share-card .wa-footer {
+  margin-top: 22px; padding-top: 14px;
+  border-top: 1px solid #30363d;
+  font-size: 12px; color: #6e7681; text-align: center;
+}

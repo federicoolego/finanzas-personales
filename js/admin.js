@@ -8,6 +8,12 @@
   const toggleIcon = toggleBtn && toggleBtn.querySelector(".admin-toggle-icon");
   const toggleLabel = toggleBtn && toggleBtn.querySelector(".admin-toggle-label");
 
+  // Nuevos elementos: toggle Solo lectura / Edición y FAB WhatsApp
+  const modeBtn   = document.getElementById("mode-toggle");
+  const modeIcon  = modeBtn && modeBtn.querySelector(".mode-toggle-icon");
+  const modeLabel = modeBtn && modeBtn.querySelector(".mode-toggle-label");
+  const waFab     = document.getElementById("wa-share-fab");
+
   // ====================================================================
   //   Modal helpers
   // ====================================================================
@@ -42,15 +48,46 @@
   if (!window.sb) {
     console.warn("admin.js: cliente Supabase no configurado.");
     if (toggleBtn) toggleBtn.style.display = "none";
+    if (modeBtn)   modeBtn.style.display = "none";
+    if (waFab)     waFab.style.display = "none";
     return;
   }
 
-  // ---------- Sesión ----------
+  // ====================================================================
+  //   Sesión + modos (solo lectura / edición)
+  // ====================================================================
+  // Reglas:
+  //  - Sin sesión: sin `is-authed`, sin `is-admin`. Se ve el botón "Admin" para login.
+  //  - Con sesión: `is-authed` = TRUE. Por defecto NO se activa `is-admin` (modo solo lectura).
+  //  - Botón `#mode-toggle` alterna `is-admin` para pasar a modo edición y volver.
+  //  - Al SIGNED_OUT: se quita `is-admin` también.
+  function applyModeUI() {
+    const editing = document.body.classList.contains("is-admin");
+    if (!modeBtn) return;
+    if (editing) {
+      modeIcon.textContent = "✏️";
+      modeLabel.textContent = "Edición";
+      modeBtn.classList.add("editing");
+      modeBtn.title = "Modo edición activo · click para volver a solo lectura";
+    } else {
+      modeIcon.textContent = "👁";
+      modeLabel.textContent = "Solo lectura";
+      modeBtn.classList.remove("editing");
+      modeBtn.title = "Modo solo lectura · click para editar";
+    }
+  }
+
   async function updateSessionUI() {
     const { data: { session } } = await window.sb.auth.getSession();
-    const isAdmin = !!session;
-    document.body.classList.toggle("is-admin", isAdmin);
-    if (isAdmin) {
+    const authed = !!session;
+    document.body.classList.toggle("is-authed", authed);
+
+    if (!authed) {
+      // Al perder sesión, salir de edición
+      document.body.classList.remove("is-admin");
+    }
+
+    if (authed) {
       toggleIcon.textContent = "🔓";
       const email = session.user.email || "";
       toggleLabel.textContent = email.split("@")[0] || "Admin";
@@ -60,13 +97,7 @@
       toggleLabel.textContent = "Admin";
       toggleBtn.title = "Modo administrador";
     }
-    // refrescar tabla para que los clicks de edición se enganchen
-    if (typeof window.reloadReservas === "function") {
-      // no recargar data, sólo re-renderizar filas con listener
-      const btn = document.querySelector('[data-new="reserva"]');
-      // truco: forzar re-render llamando reload (barato)
-      // -- comentado: reload trae todo, con re-render local basta
-    }
+    applyModeUI();
   }
   window.sb.auth.onAuthStateChange(() => { updateSessionUI(); });
   updateSessionUI();
@@ -76,6 +107,158 @@
     if (session) openAdminMenu(session.user.email);
     else openLoginModal();
   });
+
+  // Toggle Solo lectura / Edición
+  if (modeBtn) {
+    modeBtn.addEventListener("click", async () => {
+      const { data: { session } } = await window.sb.auth.getSession();
+      if (!session) return; // por si acaso
+      const nowEditing = !document.body.classList.contains("is-admin");
+      document.body.classList.toggle("is-admin", nowEditing);
+      applyModeUI();
+      // Re-render de la tabla para enganchar/soltar el click de edición en filas
+      if (typeof window.reloadReservas === "function") {
+        await window.reloadReservas();
+      }
+    });
+  }
+
+  // ====================================================================
+  //   FAB WhatsApp: capturar KPIs (con filtros) y compartir
+  // ====================================================================
+  function readFiltersSummary() {
+    const anio    = (document.querySelector("#combo-anio .combo-input")   || {}).value || "";
+    const mes     = (document.querySelector("#combo-mes .combo-input")    || {}).value || "";
+    const reserva = (document.querySelector("#combo-reserva .combo-input")|| {}).value || "";
+    const lastN   = (document.getElementById("last-n") || {}).value || "";
+    const parts = [];
+    if (anio && anio.toLowerCase() !== "todos")   parts.push(`Año: ${anio}`);
+    if (mes  && mes.toLowerCase()  !== "todos")   parts.push(`Mes: ${mes}`);
+    if (reserva && reserva.toLowerCase() !== "todas") parts.push(`Reserva: ${reserva}`);
+    if (lastN) parts.push(`Últimos ${lastN} meses`);
+    return parts.length ? parts.join(" · ") : "Sin filtros aplicados (vista total)";
+  }
+
+  function txt(id) {
+    const el = document.getElementById(id);
+    return el ? (el.textContent || "").trim() : "";
+  }
+
+  function buildShareCard() {
+    const filtros = readFiltersSummary();
+    const now = new Date();
+    const fecha = now.toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" });
+
+    const kpiRow = (title, valId, subId, tone) => `
+      <div class="wa-kpi ${tone}">
+        <div class="wa-kpi-label">${title}</div>
+        <div class="wa-kpi-value">${escapeHtml(txt(valId) || "–")}</div>
+        <div class="wa-kpi-sub">${escapeHtml(txt(subId))}</div>
+      </div>`;
+
+    const card = document.createElement("div");
+    card.className = "wa-share-card";
+    card.innerHTML = `
+      <div class="wa-header">
+        <div class="wa-eyebrow">Tenencia total</div>
+        <div class="wa-title">Mis Reservas en el Tiempo</div>
+        <div class="wa-owner">Federico Olego · ${fecha}</div>
+        <div class="wa-filters">🔎 ${escapeHtml(filtros)}</div>
+      </div>
+
+      <div class="wa-section">
+        <div class="wa-section-title"><span class="wa-badge ars">$ ARS</span> Tenencia en Pesos</div>
+        <div class="wa-kpis">
+          ${kpiRow("Tenencia actual",   "kpi-ars-total",    "kpi-ars-total-sub",    "hi")}
+          ${kpiRow("Variación mes",     "kpi-ars-var-mes",  "kpi-ars-var-mes-sub",  "")}
+          ${kpiRow("Variación año",     "kpi-ars-var-anio", "kpi-ars-var-anio-sub", "")}
+          ${kpiRow("Máximo histórico",  "kpi-ars-max",      "kpi-ars-max-sub",      "")}
+          ${kpiRow("Meses con carga",   "kpi-ars-meses",    "kpi-ars-meses-sub",    "")}
+        </div>
+      </div>
+
+      <div class="wa-section">
+        <div class="wa-section-title"><span class="wa-badge usd">US$</span> Tenencia en Dólares</div>
+        <div class="wa-kpis">
+          ${kpiRow("Tenencia actual",   "kpi-usd-total",    "kpi-usd-total-sub",    "hi")}
+          ${kpiRow("Variación mes",     "kpi-usd-var-mes",  "kpi-usd-var-mes-sub",  "")}
+          ${kpiRow("Variación año",     "kpi-usd-var-anio", "kpi-usd-var-anio-sub", "")}
+          ${kpiRow("Máximo histórico",  "kpi-usd-max",      "kpi-usd-max-sub",      "")}
+          ${kpiRow("Meses con carga",   "kpi-usd-meses",    "kpi-usd-meses-sub",    "")}
+        </div>
+      </div>
+
+      <div class="wa-footer">Reservas · Tenencia en el tiempo</div>
+    `;
+    return card;
+  }
+
+  async function shareKPIsWhatsApp() {
+    if (typeof window.html2canvas !== "function") {
+      alert("No se pudo cargar el motor de captura (html2canvas). Revisá la conexión.");
+      return;
+    }
+    // Feedback visual
+    waFab.classList.add("loading");
+    waFab.disabled = true;
+
+    const card = buildShareCard();
+    document.body.appendChild(card);
+
+    try {
+      const canvas = await window.html2canvas(card, {
+        backgroundColor: "#0d1117",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: card.scrollWidth,
+        windowHeight: card.scrollHeight
+      });
+
+      await new Promise((resolve) => {
+        canvas.toBlob(async (blob) => {
+          if (!blob) { resolve(); return; }
+          const filename = `reservas-kpis-${new Date().toISOString().slice(0,10)}.png`;
+          const file = new File([blob], filename, { type: "image/png" });
+          const filtros = readFiltersSummary();
+          const shareText = `📊 Mis Reservas · ${filtros}`;
+
+          // 1) Web Share API con archivo (móvil moderno)
+          try {
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                title: "Mis Reservas",
+                text: shareText
+              });
+              resolve();
+              return;
+            }
+          } catch (_) { /* usuario canceló o no soportado */ }
+
+          // 2) Fallback: descargar imagen + abrir WhatsApp con texto
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url; a.download = filename;
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+          const waMsg = encodeURIComponent(`${shareText}\n(La imagen quedó descargada, adjuntala en el chat)`);
+          window.open(`https://wa.me/?text=${waMsg}`, "_blank", "noopener");
+          resolve();
+        }, "image/png");
+      });
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo generar la imagen: " + (e.message || e));
+    } finally {
+      card.remove();
+      waFab.classList.remove("loading");
+      waFab.disabled = false;
+    }
+  }
+
+  if (waFab) waFab.addEventListener("click", shareKPIsWhatsApp);
 
   // ---------- Login ----------
   function openLoginModal() {
@@ -118,13 +301,17 @@
   }
 
   function openAdminMenu(email) {
+    const editing = document.body.classList.contains("is-admin");
     openModal(`
       <h2 class="admin-title">Modo administrador</h2>
       <p class="admin-sub">Sesión activa como <strong>${escapeHtml(email)}</strong>.</p>
-      <p class="admin-hint">Con la sesión abierta podés:</p>
+      <p class="admin-hint">
+        Estado actual: <strong>${editing ? "✏️ Edición" : "👁 Solo lectura"}</strong>.
+        Usá el botón <em>Solo lectura / Edición</em> del encabezado para cambiar de modo.
+      </p>
       <ul class="admin-list">
-        <li>Usar el botón <strong>➕ Nueva carga</strong> arriba.</li>
-        <li>Click en cualquier <strong>fila de la tabla</strong> para editar o eliminar.</li>
+        <li>En modo edición podés usar <strong>➕ Nueva carga</strong>.</li>
+        <li>Click en cualquier <strong>fila de la tabla</strong> para editar o eliminar (solo en edición).</li>
         <li>Gestionar el <strong>catálogo de reservas</strong> (agregar / renombrar).</li>
       </ul>
       <div class="admin-actions with-delete">
@@ -237,7 +424,6 @@
       const err = $("#cat-err"); err.hidden = true;
       try {
         await createCatalogItem(fd.get("nombre"), fd.get("orden"));
-        // recargar view con uso
         const { data: fresh } = await window.sb.from("reservas_catalogo_con_uso").select("*");
         const freshMap = new Map((fresh || []).map(x => [x.id, x.uso]));
         $("#cat-list").innerHTML = renderCatalogList(freshMap);
@@ -296,7 +482,6 @@
   // ====================================================================
   function todayISO() {
     const d = new Date();
-    // ISO local (no UTC) para evitar corrimiento por timezone
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
@@ -304,11 +489,15 @@
   }
 
   async function openReservaForm(row) {
+    // Bloqueo si no está en modo edición
+    if (!document.body.classList.contains("is-admin")) {
+      alert("Estás en modo solo lectura. Cambiá a modo edición para modificar registros.");
+      return;
+    }
     try { await ensureCatalog(); }
     catch (e) { alert(e.message); return; }
     const isEdit = !!row;
 
-    // Buscar reserva_id a partir del nombre (row viene de la view aplanada)
     let initialReservaId = "";
     if (isEdit) {
       const found = catalogCache.find(c => c.nombre === row.reserva);
@@ -391,8 +580,6 @@
           const { error } = await window.sb.from("reservas").update(payload).eq("id", row.id);
           if (error) throw error;
         } else {
-          // Upsert por (reserva_id, moneda, anio, mes) — anio/mes son generated,
-          // así que Postgres los calcula. Usamos onConflict manual con la unique.
           const { error } = await window.sb
             .from("reservas")
             .upsert(payload, { onConflict: "reserva_id,moneda,anio,mes" });
