@@ -1,83 +1,98 @@
-# Calculadora Familiar
+# Reservas · Tenencia en el tiempo
 
-App de una sola pantalla: **Ingresos − Gastos Fijos − Reservas = Disponible**.
-Cada categoría tiene sus ítems, y podés **agregar, editar y eliminar** cualquiera.
+Dashboard personal para registrar y visualizar la tenencia de mis reservas financieras a lo largo del tiempo, en **ARS** y **USD**.
 
-Arranca funcionando de una (guarda en el navegador). Si querés que se **comparta
-entre dispositivos**, conectás Supabase siguiendo los pasos de abajo.
+Reservas por defecto: `Ahorro`, `Vacaciones`, `Fondo Emergencia`, `Portafolio Jubilación`.
+El catálogo es editable desde la app (modo admin).
+
+Basado en la misma arquitectura y estilo que Estadisticas-Padel — dark theme GitHub-style, combos multi-selección, Chart.js.
+
+## Estructura
+
+```
+Reservas-Tenencia/
+├── index.html
+├── css/
+│   ├── styles.css       # dashboard
+│   └── admin.css        # modales admin + topbar
+├── js/
+│   ├── env.js           # loader de la view reservas_view
+│   ├── supabase-client.js
+│   ├── reservas.js      # dashboard (KPIs, charts, tabla)
+│   └── admin.js         # auth + CRUD + catálogo
+└── sql/
+    └── schema.sql       # esquema Supabase (correr una vez)
+```
+
+## Modelo de datos
+
+Cada carga es un **snapshot mensual**: el saldo total de una reserva en una moneda al cierre del mes.
+
+Tabla `reservas`:
+
+| campo        | tipo         | notas |
+|--------------|--------------|-------|
+| id           | bigserial    | PK |
+| fecha        | date         | fin de mes (o cualquier día del mes) |
+| anio         | int          | generated from fecha |
+| mes          | int          | generated from fecha |
+| reserva_id   | fk           | → `reservas_catalogo` |
+| moneda       | text         | `'ARS'` \| `'USD'` |
+| monto        | numeric      | saldo total de esa reserva a esa fecha |
+| nota         | text         | opcional |
+
+**Constraint clave:** `unique (reserva_id, moneda, anio, mes)` — una sola fila por combinación. Si volvés a cargar el mismo mes, se hace upsert (actualiza la existente).
+
+## Setup
+
+1. Creá un proyecto en [supabase.com](https://supabase.com).
+2. Corré todo el contenido de `sql/schema.sql` en el SQL Editor.
+3. Copiá `Project URL` y `anon public key` desde *Settings → API*.
+4. Editá `js/supabase-client.js` con esos valores.
+5. En *Authentication → Users*, creá tu usuario admin (email + password).
+6. Servís los archivos y login desde el botón `🔒 Admin`:
+
+```bash
+python -m http.server 8000
+# http://localhost:8000
+```
+
+Sin login sólo se ve el dashboard (lectura). Con sesión activa aparecen los botones de edición.
+
+Si querés bloquear la lectura pública también, en `sql/schema.sql` cambiá los policies de SELECT para usar `(auth.role() = 'authenticated')` en vez de `true`.
+
+## KPIs
+
+Por moneda (ARS y USD):
+
+- **Tenencia actual** — suma de última carga de cada reserva.
+- **Variación mes** — vs mes anterior.
+- **Variación año** — vs mismo mes hace 12 meses.
+- **Máximo histórico** — pico + mes en que ocurrió.
+- **Meses con carga** — cuántos meses del rango tienen datos.
+
+## Charts
+
+- Evolución tenencia total ARS / USD (línea, carry-forward mensual).
+- Composición actual por reserva ARS / USD (dona).
+- Evolución stackeada por reserva ARS / USD (barras apiladas).
+
+Los períodos sin carga toman el último valor conocido (carry-forward), así que no ves huecos si un mes no cargaste.
+
+## Filtros
+
+- Año, Mes, Reserva (multi-selección).
+- Últimos N meses (input numérico).
+- Botón "Limpiar filtros".
+
+## Modo admin
+
+Con sesión Supabase activa:
+
+- Botón `➕ Nueva carga` en el header — abre form con **upsert** por (reserva, moneda, año-mes).
+- Click en cualquier fila de la tabla → editar / eliminar.
+- Menú admin → `⚙️ Reservas` → gestionar el catálogo (agregar, renombrar, borrar).
 
 ---
 
-## Cómo usarla
-
-1. Abrí `index.html` en el navegador (o subila a GitHub Pages).
-2. Editá los montos y nombres tocando cada campo.
-3. Usá **+ Agregar ítem** para sumar filas y la **✕** para borrarlas.
-4. El resultado se recalcula solo.
-
-El cartel arriba a la derecha te dice dónde se está guardando:
-- **Local** → solo en este navegador/dispositivo.
-- **Nube** → en Supabase, compartido entre todos los dispositivos.
-
----
-
-## ¿Qué es Supabase?
-
-Supabase es un servicio gratuito que te da una **base de datos en la nube** lista
-para usar, sin que tengas que montar un servidor. Es la pieza que le faltaba a tu
-proyecto anterior: en vez de guardar los datos en cada navegador por separado
-(que es lo que hace `localStorage`, y por eso veías cosas distintas en cada
-dispositivo), los guarda en un solo lugar central. Así, abras donde abras,
-ves lo mismo.
-
-Para esta app usás dos cosas de Supabase:
-- una **tabla** llamada `items` donde viven tus ingresos, gastos y reservas;
-- dos credenciales (una **URL** y una **clave anon public**) que la app usa para
-  conectarse.
-
-## Cómo crear tu cuenta y conectar (5 pasos)
-
-1. **Creá la cuenta**: entrá a https://supabase.com y registrate (podés usar tu
-   cuenta de GitHub). Es gratis; el plan free alcanza de sobra para esto.
-
-2. **Creá un proyecto**: botón *New project*. Ponele un nombre (ej.
-   `finanzas-familia`), elegí una contraseña para la base (guardala) y la región
-   más cercana (South America / São Paulo). Esperá ~1 minuto a que se arme.
-
-3. **Creá la tabla**: en el menú izquierdo entrá a **SQL Editor** → *New query*,
-   pegá TODO el contenido del archivo `supabase.sql` que viene en este proyecto y
-   apretá **Run**. Eso crea la tabla `items` con los permisos correctos.
-
-4. **Copiá tus credenciales**: menú izquierdo → **Project Settings** (el
-   engranaje) → **API**. Copiá:
-   - **Project URL** (algo como `https://xxxx.supabase.co`)
-   - la clave **anon public** (un texto largo que empieza con `eyJ...`)
-
-5. **Pegalas en la app**: abrí `js/config.js` y completá:
-   ```js
-   const SUPABASE_URL  = "https://xxxx.supabase.co";
-   const SUPABASE_ANON = "eyJhbGciOiJI...";
-   ```
-   Guardá y recargá la app. El cartel debería pasar a decir **Nube**.
-
-La primera vez que abrís con Supabase conectado, la app carga sola los datos
-iniciales. A partir de ahí, todo lo que edites queda guardado en la nube.
-
----
-
-## Nota de seguridad
-
-La clave **anon public** está pensada para ir en el navegador, no es secreta. Con
-la configuración de `supabase.sql`, cualquiera que tenga tu clave y tu URL puede
-leer y escribir la tabla. Para uso familiar privado (y sin datos sensibles como
-números de cuenta) está bien. Si más adelante querés que solo entren personas
-autorizadas, se agrega login de Supabase y se ajustan las políticas de acceso —
-avisame y lo armamos.
-
-## Para tu proyecto anterior (gastos-fijos)
-
-El mismo concepto aplica: para que deje de mostrar cosas distintas en cada
-dispositivo hay que reemplazar el `localStorage` por Supabase. Es más trabajo
-porque tiene varias tablas (gastos, ingresos, montos por mes), pero el camino es
-idéntico: crear las tablas, y cambiar el `store.js` para que lea/escriba de la
-base en lugar del navegador. Cuando quieras lo encaramos.
+Equipo de Automatización · FYO

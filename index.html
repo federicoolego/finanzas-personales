@@ -1,50 +1,134 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculadora Familiar</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reservas · Tenencia</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <span class="brand-dot"></span>
-      <div>
-        <h1>Calculadora Familiar</h1>
-        <p class="brand-sub" id="brand-sub">Cargando…</p>
+
+  <!-- Barra de controles arriba a la derecha -->
+  <div class="topbar">
+    <button id="admin-toggle" class="admin-toggle" aria-label="Modo administrador" title="Modo administrador">
+      <span class="admin-toggle-icon">🔒</span>
+      <span class="admin-toggle-label">Admin</span>
+    </button>
+  </div>
+
+  <div class="wrap">
+
+    <header class="hero">
+      <div class="title-block">
+        <div class="eyebrow">Tenencia total</div>
+        <h1>Mis Reservas<br>en el Tiempo</h1>
+        <p class="sub">Federico Olego</p>
+        <p class="updated" id="last-update"></p>
+        <button class="admin-only admin-new-btn" data-new="reserva">➕ Nueva carga</button>
       </div>
-    </div>
-    <div class="topbar-actions">
-      <span id="sync-badge" class="sync-badge sync-local" title="Estado de sincronización">Local</span>
-    </div>
-  </header>
+      <div class="record-badge">
+        <div class="big" id="record"></div>
+        <div class="lbl">Tenencia actual (ARS / USD)</div>
+      </div>
+    </header>
 
-  <section class="month-bar">
-    <div class="month-bar-inner">
-      <h2 id="month-title" class="month-title">—</h2>
-      <label class="month-select-wrap">
-        <span class="month-select-label">Mes</span>
-        <select id="month-select" class="month-select" aria-label="Seleccionar mes del reporte"></select>
-      </label>
-    </div>
-  </section>
+    <section class="filters" aria-label="Filtros">
+      <div class="field"><label>Año</label>
+        <div class="combo" id="combo-anio">
+          <input type="text" class="combo-input" readonly placeholder="Todos" aria-label="Año">
+          <div class="combo-panel"><ul class="combo-list"></ul></div>
+        </div></div>
+      <div class="field"><label>Mes</label>
+        <div class="combo" id="combo-mes">
+          <input type="text" class="combo-input" readonly placeholder="Todos" aria-label="Mes">
+          <div class="combo-panel"><ul class="combo-list"></ul></div>
+        </div></div>
+      <div class="field"><label>Reserva</label>
+        <div class="combo" id="combo-reserva">
+          <input type="text" class="combo-input" readonly placeholder="Todas" aria-label="Reserva">
+          <div class="combo-panel"><ul class="combo-list"></ul></div>
+        </div></div>
+      <div class="field"><label>Últimos N meses</label>
+        <input type="number" id="last-n" class="last-n-input" min="1" max="120" step="1"
+               placeholder="Todos" aria-label="Últimos N meses" inputmode="numeric">
+      </div>
+      <button class="reset" id="reset">Limpiar filtros</button>
+    </section>
 
-  <main id="app" class="app"></main>
+    <!-- KPIs ARS -->
+    <h2 class="section-title"><span class="badge-currency ars">$ ARS</span> Tenencia en Pesos</h2>
+    <section class="kpis kpis-main">
+      <div class="kpi kpi-ars"><div class="label">Tenencia actual</div><div class="value" id="kpi-ars-total">–</div><div class="sub" id="kpi-ars-total-sub"></div></div>
+      <div class="kpi" id="kpi-card-ars-var-mes"><div class="label">Variación mes</div><div class="value" id="kpi-ars-var-mes">–</div><div class="sub" id="kpi-ars-var-mes-sub"></div></div>
+      <div class="kpi" id="kpi-card-ars-var-anio"><div class="label">Variación año</div><div class="value" id="kpi-ars-var-anio">–</div><div class="sub" id="kpi-ars-var-anio-sub"></div></div>
+      <div class="kpi" id="kpi-card-ars-max"><div class="label">Máximo histórico</div><div class="value" id="kpi-ars-max">–</div><div class="sub" id="kpi-ars-max-sub"></div></div>
+      <div class="kpi" id="kpi-card-ars-meses"><div class="label">Meses con carga</div><div class="value" id="kpi-ars-meses">–</div><div class="sub" id="kpi-ars-meses-sub"></div></div>
+    </section>
 
-  <div id="toast" class="toast" hidden></div>
+    <!-- KPIs USD -->
+    <h2 class="section-title"><span class="badge-currency usd">US$</span> Tenencia en Dólares</h2>
+    <section class="kpis kpis-main">
+      <div class="kpi kpi-usd"><div class="label">Tenencia actual</div><div class="value" id="kpi-usd-total">–</div><div class="sub" id="kpi-usd-total-sub"></div></div>
+      <div class="kpi" id="kpi-card-usd-var-mes"><div class="label">Variación mes</div><div class="value" id="kpi-usd-var-mes">–</div><div class="sub" id="kpi-usd-var-mes-sub"></div></div>
+      <div class="kpi" id="kpi-card-usd-var-anio"><div class="label">Variación año</div><div class="value" id="kpi-usd-var-anio">–</div><div class="sub" id="kpi-usd-var-anio-sub"></div></div>
+      <div class="kpi" id="kpi-card-usd-max"><div class="label">Máximo histórico</div><div class="value" id="kpi-usd-max">–</div><div class="sub" id="kpi-usd-max-sub"></div></div>
+      <div class="kpi" id="kpi-card-usd-meses"><div class="label">Meses con carga</div><div class="value" id="kpi-usd-meses">–</div><div class="sub" id="kpi-usd-meses-sub"></div></div>
+    </section>
 
-  <!-- Config Supabase: editá estos dos valores cuando tengas tu proyecto -->
-  <script src="js/config.js"></script>
+    <!-- Charts -->
+    <section class="grid">
+      <div class="card"><h3>Evolución tenencia ARS</h3>
+        <div class="chart-box"><canvas id="chart-line-ars"></canvas></div></div>
+      <div class="card"><h3>Evolución tenencia USD</h3>
+        <div class="chart-box"><canvas id="chart-line-usd"></canvas></div></div>
+      <div class="card"><h3>Composición actual · ARS</h3>
+        <div class="chart-box"><canvas id="chart-donut-ars"></canvas></div></div>
+      <div class="card"><h3>Composición actual · USD</h3>
+        <div class="chart-box"><canvas id="chart-donut-usd"></canvas></div></div>
+      <div class="card"><h3>Evolución por reserva · ARS</h3>
+        <div class="chart-box tall"><canvas id="chart-stack-ars"></canvas></div></div>
+      <div class="card"><h3>Evolución por reserva · USD</h3>
+        <div class="chart-box tall"><canvas id="chart-stack-usd"></canvas></div></div>
+    </section>
+
+    <!-- Tabla de detalle -->
+    <section class="card full table-card">
+      <h3>Detalle de cargas <span class="count" id="tabla-count"></span></h3>
+      <div class="table-scroll">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>#</th><th>Fecha</th><th>Reserva</th>
+              <th>Moneda</th><th class="c-right">Monto</th><th>Nota</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <span><code>Reservas · Tenencia en el tiempo</code></span>
+      <span><code>Federico Olego</code></span>
+    </footer>
+  </div>
+
+  <!-- Contenedor de modales admin/env -->
+  <div id="admin-modal-root"></div>
+
+  <!-- 1) Switch de entorno + SDK Supabase + cliente -->
+  <script src="js/env.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/utils.js"></script>
-  <script src="js/store.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/month.js"></script>
-  <script src="js/whatsapp.js"></script>
+  <script src="js/supabase-client.js?v=1"></script>
+
+  <!-- 2) App -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="js/reservas.js?v=1"></script>
+  <script src="js/admin.js?v=1"></script>
 </body>
 </html>
