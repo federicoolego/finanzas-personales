@@ -98,7 +98,7 @@ header.hero {
   font-weight: 700;
   letter-spacing: 1px;
 }
-.badge-currency.ars { background: rgba(251,191,36,0.15); color: var(--ars); }
+.badge-currency.ars { background: rgba(59,130,246,0.12); color: var(--ars); }
 .badge-currency.usd { background: rgba(74,222,128,0.15); color: var(--usd); }
 
 /* Filters */
