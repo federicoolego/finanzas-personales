@@ -375,7 +375,7 @@ body.is-admin .tabla tbody tr { cursor: pointer; }
   font-size: 12px;
   font-weight: 600;
 }
-.badge.b-ars { background: rgba(251,191,36,0.15); color: var(--ars); }
+.badge.b-ars { background: rgba(59, 130, 246, 0.12); color: var(--ars); }
 .badge.b-usd { background: rgba(74,222,128,0.15); color: var(--usd); }
 .badge.b-reserva { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
 
