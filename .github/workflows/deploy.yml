@@ -1,6 +1,7 @@
 # Deploy opcional a GitHub Pages.
 # Requiere: Settings > Pages > Source = "GitHub Actions"
-# y los secrets VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY en Settings > Secrets > Actions.
+# y VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY cargadas como Variables (o Secrets) del repo
+# o del environment "github-pages". La anon key es pública por diseño; la protege el RLS.
 name: Deploy a GitHub Pages
 on:
   push:
@@ -16,6 +17,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: github-pages   # necesario para leer las variables del environment
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,8 +27,8 @@ jobs:
       - run: npm install
       - run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY || secrets.VITE_SUPABASE_ANON_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
