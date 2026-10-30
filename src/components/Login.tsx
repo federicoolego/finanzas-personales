@@ -19,7 +19,7 @@ export default function Login() {
   return (
     <main className="login">
       <form onSubmit={submit} className="login-form">
-        <h1>Mis recibos de sueldo</h1>
+        <h1>Finanzas personales</h1>
         <p className="muted">Ingresá con tu usuario de Supabase.</p>
         <label>
           Email

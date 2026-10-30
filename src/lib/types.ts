@@ -22,3 +22,20 @@ export interface PayslipInput {
   fx_rate: number
   notes: string | null
 }
+
+export interface SalaryRaise {
+  id: string
+  year: number
+  month: number
+  salary: number
+  ipc_yoy: number | null
+  notes: string | null
+}
+
+export interface SalaryRaiseInput {
+  year: number
+  month: number
+  salary: number
+  ipc_yoy: number | null
+  notes: string | null
+}

@@ -32,3 +32,7 @@ export function parseNum(input: string): number {
   else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '')
   return Number(s)
 }
+
+/** Diferencia en puntos porcentuales, ej: "+31,9 pp" */
+export const fmtPP = (v: number | null | undefined) =>
+  v == null || !isFinite(v) ? '—' : `${v > 0 ? '+' : ''}${v.toLocaleString('es-AR', { maximumFractionDigits: 1 })} pp`
