@@ -1,98 +1,41 @@
-# Reservas · Tenencia en el tiempo
+# Mis recibos de sueldo
 
-Dashboard personal para registrar y visualizar la tenencia de mis reservas financieras a lo largo del tiempo, en **ARS** y **USD**.
+App personal para cargar, editar y analizar el historial de recibos de sueldo: resumen con KPIs y gráficos, lista editable y exportación a CSV.
 
-Reservas por defecto: `Ahorro`, `Vacaciones`, `Fondo Emergencia`, `Portafolio Jubilación`.
-El catálogo es editable desde la app (modo admin).
+**Stack:** React + Vite + TypeScript, Recharts, Supabase (Postgres + Auth con RLS).
 
-Basado en la misma arquitectura y estilo que Estadisticas-Padel — dark theme GitHub-style, combos multi-selección, Chart.js.
+## Puesta en marcha
 
-## Estructura
+### 1. Supabase
+1. Creá un proyecto (o usá uno existente).
+2. **Authentication → Users → Add user**: creá tu usuario con email y contraseña.
+   Después, en **Authentication → Sign In / Providers**, desactivá *Allow new users to sign up* para que nadie más pueda registrarse.
+3. **SQL Editor**: pegá y corré `supabase/schema.sql` (crea la tabla `payslips`, columnas calculadas, trigger y políticas RLS).
+4. Pegá `supabase/seed.sql`, cambiá el email de la línea `v_email` por el de tu usuario y corrélo. Importa los 68 recibos de marzo 2021 a octubre 2026.
+5. **Project Settings → API**: copiá la *Project URL* y la clave *anon public*.
 
+### 2. Local
+```bash
+cp .env.example .env     # completá URL y anon key
+npm install
+npm run dev
 ```
-Reservas-Tenencia/
-├── index.html
-├── css/
-│   ├── styles.css       # dashboard
-│   └── admin.css        # modales admin + topbar
-├── js/
-│   ├── env.js           # loader de la view reservas_view
-│   ├── supabase-client.js
-│   ├── reservas.js      # dashboard (KPIs, charts, tabla)
-│   └── admin.js         # auth + CRUD + catálogo
-└── sql/
-    └── schema.sql       # esquema Supabase (correr una vez)
-```
+
+### 3. Deploy
+- **Vercel / Netlify:** importá el repo, agregá las dos variables `VITE_SUPABASE_*` y listo (build `npm run build`, salida `dist`).
+- **GitHub Pages:** ya viene `.github/workflows/deploy.yml`. Activá *Settings → Pages → Source: GitHub Actions* y cargá los secrets `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
+
+## Seguridad
+Los datos están protegidos por Row Level Security: sin sesión, la API devuelve cero filas. La anon key es pública por diseño; lo que protege tus datos son las políticas y el login. Dejá el registro de usuarios desactivado.
 
 ## Modelo de datos
+| Campo | Descripción |
+|---|---|
+| `year`, `month` | Período (único por usuario) |
+| `gross`, `net` | Bruto y neto en ARS |
+| `ganancias` | Negativo = retenido, positivo = devolución |
+| `fx_rate` | Pesos por dólar usado ese mes |
+| `net_gross_pct`, `ganancias_pct`, `net_usd`, `gross_usd` | Calculadas por Postgres |
 
-Cada carga es un **snapshot mensual**: el saldo total de una reserva en una moneda al cierre del mes.
-
-Tabla `reservas`:
-
-| campo        | tipo         | notas |
-|--------------|--------------|-------|
-| id           | bigserial    | PK |
-| fecha        | date         | fin de mes (o cualquier día del mes) |
-| anio         | int          | generated from fecha |
-| mes          | int          | generated from fecha |
-| reserva_id   | fk           | → `reservas_catalogo` |
-| moneda       | text         | `'ARS'` \| `'USD'` |
-| monto        | numeric      | saldo total de esa reserva a esa fecha |
-| nota         | text         | opcional |
-
-**Constraint clave:** `unique (reserva_id, moneda, anio, mes)` — una sola fila por combinación. Si volvés a cargar el mismo mes, se hace upsert (actualiza la existente).
-
-## Setup
-
-1. Creá un proyecto en [supabase.com](https://supabase.com).
-2. Corré todo el contenido de `sql/schema.sql` en el SQL Editor.
-3. Copiá `Project URL` y `anon public key` desde *Settings → API*.
-4. Editá `js/supabase-client.js` con esos valores.
-5. En *Authentication → Users*, creá tu usuario admin (email + password).
-6. Servís los archivos y login desde el botón `🔒 Admin`:
-
-```bash
-python -m http.server 8000
-# http://localhost:8000
-```
-
-Sin login sólo se ve el dashboard (lectura). Con sesión activa aparecen los botones de edición.
-
-Si querés bloquear la lectura pública también, en `sql/schema.sql` cambiá los policies de SELECT para usar `(auth.role() = 'authenticated')` en vez de `true`.
-
-## KPIs
-
-Por moneda (ARS y USD):
-
-- **Tenencia actual** — suma de última carga de cada reserva.
-- **Variación mes** — vs mes anterior.
-- **Variación año** — vs mismo mes hace 12 meses.
-- **Máximo histórico** — pico + mes en que ocurrió.
-- **Meses con carga** — cuántos meses del rango tienen datos.
-
-## Charts
-
-- Evolución tenencia total ARS / USD (línea, carry-forward mensual).
-- Composición actual por reserva ARS / USD (dona).
-- Evolución stackeada por reserva ARS / USD (barras apiladas).
-
-Los períodos sin carga toman el último valor conocido (carry-forward), así que no ves huecos si un mes no cargaste.
-
-## Filtros
-
-- Año, Mes, Reserva (multi-selección).
-- Últimos N meses (input numérico).
-- Botón "Limpiar filtros".
-
-## Modo admin
-
-Con sesión Supabase activa:
-
-- Botón `➕ Nueva carga` en el header — abre form con **upsert** por (reserva, moneda, año-mes).
-- Click en cualquier fila de la tabla → editar / eliminar.
-- Menú admin → `⚙️ Reservas` → gestionar el catálogo (agregar, renombrar, borrar).
-
----
-
-Equipo de Automatización · FYO
+## Qué muestra el resumen
+Neto en USD con promedio móvil de 6 meses, bruto vs neto (USD o ARS), neto/bruto, Ganancias mes a mes, tipo de cambio, promedio anual, comparativa año contra año y un mapa de calor año × mes. KPIs: variación vs mes anterior e interanual (pesos y dólares), mediana y promedio de 12 meses, acumulado del año, mejor y peor mes, total cobrado.
