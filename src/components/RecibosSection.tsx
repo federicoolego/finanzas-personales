@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { Payslip, PayslipInput } from '../lib/types'
 import { sortPayslips } from '../lib/kpis'
 import { periodLabel } from '../lib/format'
+import { CURRENCY_KEY, type Currency } from '../lib/currency'
 import { useToast } from '../lib/useToast'
 import Dashboard from './Dashboard'
 import PayslipsTable from './PayslipsTable'
@@ -15,6 +16,21 @@ export default function RecibosSection() {
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('resumen')
+  const [cur, setCurState] = useState<Currency>(() => {
+    try {
+      return localStorage.getItem(CURRENCY_KEY) === 'ARS' ? 'ARS' : 'USD'
+    } catch {
+      return 'USD'
+    }
+  })
+  const setCur = (c: Currency) => {
+    setCurState(c)
+    try {
+      localStorage.setItem(CURRENCY_KEY, c)
+    } catch {
+      /* sin storage, no pasa nada */
+    }
+  }
   const [form, setForm] = useState<{ open: boolean; editing: Payslip | null }>({ open: false, editing: null })
   const [toast, setToast] = useToast()
 
@@ -73,16 +89,23 @@ export default function RecibosSection() {
           <button role="tab" aria-selected={tab === 'resumen'} className={tab === 'resumen' ? 'on' : ''} onClick={() => setTab('resumen')}>Resumen</button>
           <button role="tab" aria-selected={tab === 'recibos'} className={tab === 'recibos' ? 'on' : ''} onClick={() => setTab('recibos')}>Recibos</button>
         </div>
-        <button className="btn primary" onClick={() => setForm({ open: true, editing: null })}>Cargar recibo</button>
+        <div className="subbar-right">
+          <div className="controls" role="group" aria-label="Moneda">
+            {(['USD', 'ARS'] as Currency[]).map((c) => (
+              <button key={c} className={`chip ${cur === c ? 'on' : ''}`} aria-pressed={cur === c} onClick={() => setCur(c)}>{c === 'USD' ? 'Dólares' : 'Pesos'}</button>
+            ))}
+          </div>
+          <button className="btn primary" onClick={() => setForm({ open: true, editing: null })}>Cargar recibo</button>
+        </div>
       </div>
 
       {loadError && <p className="error" role="alert">{loadError}</p>}
       {loading && !payslips.length ? (
         <p className="muted">Cargando recibos…</p>
       ) : tab === 'resumen' ? (
-        <Dashboard payslips={payslips} />
+        <Dashboard payslips={payslips} cur={cur} />
       ) : (
-        <PayslipsTable payslips={payslips} onEdit={(p) => setForm({ open: true, editing: p })} onDelete={remove} />
+        <PayslipsTable payslips={payslips} cur={cur} onEdit={(p) => setForm({ open: true, editing: p })} onDelete={remove} />
       )}
 
       {form.open && (

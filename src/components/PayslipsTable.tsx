@@ -1,14 +1,18 @@
 import { useMemo, useState } from 'react'
 import type { Payslip } from '../lib/types'
-import { MONTHS, fmtARSDec, fmtPct, fmtUSDDec } from '../lib/format'
+import { MONTHS, fmtARSDec, fmtMoney, fmtPct } from '../lib/format'
+import { amount, currencyName, otherCurrency, type Currency } from '../lib/currency'
 
 interface Props {
   payslips: Payslip[]
+  cur: Currency
   onEdit: (p: Payslip) => void
   onDelete: (p: Payslip) => void
 }
 
-export default function PayslipsTable({ payslips, onEdit, onDelete }: Props) {
+export default function PayslipsTable({ payslips, cur, onEdit, onDelete }: Props) {
+  const alt = otherCurrency(cur)
+  const m = (v: number, c: Currency = cur) => fmtMoney(v, c, true)
   const years = useMemo(() => [...new Set(payslips.map((p) => p.year))].sort((a, b) => b - a), [payslips])
   const [year, setYear] = useState<number | 'all'>('all')
 
@@ -66,7 +70,7 @@ export default function PayslipsTable({ payslips, onEdit, onDelete }: Props) {
               <th className="r">Ganancias</th>
               <th className="r">% Gan.</th>
               <th className="r">TC</th>
-              <th className="r">Sueldo USD</th>
+              <th className="r">Neto en {currencyName(alt)}</th>
               <th>Notas</th>
               <th />
             </tr>
@@ -75,13 +79,13 @@ export default function PayslipsTable({ payslips, onEdit, onDelete }: Props) {
             {rows.map((p) => (
               <tr key={p.id}>
                 <td>{MONTHS[p.month - 1]} {p.year}</td>
-                <td className="r">{fmtARSDec(p.gross)}</td>
-                <td className="r">{fmtARSDec(p.net)}</td>
+                <td className="r">{m(amount(p, 'gross', cur))}</td>
+                <td className="r">{m(amount(p, 'net', cur))}</td>
                 <td className="r">{fmtPct(p.net_gross_pct, 2)}</td>
-                <td className={`r ${p.ganancias > 0 ? 'pos' : p.ganancias < 0 ? 'neg' : ''}`}>{fmtARSDec(p.ganancias)}</td>
+                <td className={`r ${p.ganancias > 0 ? 'pos' : p.ganancias < 0 ? 'neg' : ''}`}>{m(amount(p, 'ganancias', cur))}</td>
                 <td className="r">{fmtPct(p.ganancias_pct, 2)}</td>
                 <td className="r">{fmtARSDec(p.fx_rate)}</td>
-                <td className="r strong">{fmtUSDDec(p.net_usd)}</td>
+                <td className="r strong">{m(amount(p, 'net', alt), alt)}</td>
                 <td className="notes">{p.notes}</td>
                 <td className="row-actions">
                   <button className="link" onClick={() => onEdit(p)}>Editar</button>

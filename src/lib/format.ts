@@ -14,6 +14,9 @@ export const fmtARS = (v: number) => ars.format(v)
 export const fmtARSDec = (v: number) => arsDec.format(v)
 export const fmtUSD = (v: number) => `USD ${num0.format(v)}`
 export const fmtUSDDec = (v: number) => `USD ${num2.format(v)}`
+/** Monto en la moneda elegida. dec=true muestra centavos en dólares. */
+export const fmtMoney = (v: number, cur: 'USD' | 'ARS', dec = false) =>
+  cur === 'USD' ? (dec ? fmtUSDDec(v) : fmtUSD(v)) : fmtARS(v)
 export const fmtNum = (v: number) => num0.format(v)
 export const fmtCompact = (v: number) => compact.format(v)
 export const fmtPct = (v: number | null | undefined, digits = 1) =>
